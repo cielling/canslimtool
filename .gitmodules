@@ -1,0 +1,6 @@
+[submodule "sec-edgar"]
+	path = sec-edgar
+	url = https://github.com/rahulrrixe/sec-edgar.git
+[submodule "python-edgar"]
+	path = python-edgar
+	url = https://github.com/edouardswiac/python-edgar.git
