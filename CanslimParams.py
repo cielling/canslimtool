@@ -1,4 +1,4 @@
-from numpy import polyfit
+from numpy import polyfit, polyval
 import requests
 from bs4 import BeautifulSoup as BSoup
 import pandas as pd
