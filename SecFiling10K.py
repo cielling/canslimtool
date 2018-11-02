@@ -22,22 +22,25 @@ class SecFiling10K(SecFiling):
         return self.currentEps
                     
     
-    def getSales(self):
+    def getSales(self, contextId = ""):
         """Retrieves the current Sales data from the filing.
         
         WARNING! The 'currentContextRef' member must have been set first (e.g. by calling getEps or getRoe 
         before calling this function) for this function to work properly. It seems to be very tricky to 
         figure out the currentContextRef by itself."""
-        if not self.currentContextId:
-            print("ERROR! current contextId is not set!")
-            return -99.0
+        if not contextId:
+            if not self.currentContextId:
+                print("ERROR! current contextId is not set!")
+                return -99.0
+            else:
+                contextId = self.currentContextId
         all_sales_tags = []
         try:
             for tag in self.all_tags:
                 ## The filings seem to use either 'Revenues' or 'SalesRevenuesNet' to indicate the net sales amount
                 ## But the 'Revenues' tag also contains other stuff, need to filter it by its contextref attribute
                 if 'us-gaap:Revenues'.lower() == tag.name.strip():
-                    if (tag.attrs)['contextref'] == self.currentContextId:
+                    if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
                 elif 'us-gaap:SalesRevenuesNet'.lower() == tag.name.strip():
                     all_sales_tag.append(tag)

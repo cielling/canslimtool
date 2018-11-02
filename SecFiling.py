@@ -179,6 +179,10 @@ class SecFiling(ABC):
         return [sd, ed]
         
         
+    def getCurrentContextId(self):
+        return self.currentContextId
+        
+        
     def printErrors(self):
         print("\n".join(e for e in self.errorLog))
             
