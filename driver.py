@@ -1,5 +1,24 @@
 import pandas
 from sqlalchemy import create_engine
+from bs4 import BeautifulSoup as BSoup
+
+from CanslimParams import CanslimParams
+
+## Update the idx and cik_ticker_name tables in the database
+
+## Read in the screener_results.xls file
+
+## Do the Canslim analysis for each ticker in that file
+
+## Keep track of tickers that gave an error
+
+## Write the analysis results to a file screener_results_analysis.xls
+
+
+
+## Eventually: make plots
+
+
 
 ticker= "NVDA"
 
@@ -24,14 +43,13 @@ with engine.connect() as conn, conn.begin():
     print (all_10Qs, all_10Ks)
 	
 	
-NvdaCanslimParams= CanslimParams("NVDA", all_10Qs, all_10Ks)
-NvdaCanslimParams.loadData()
-NvdaCanslimParams.getEpsQuarter(0)
-NvdaCanslimParams.getEpsAnnual(-1)
-NvdaCanslimParams.getSalesQuarter(-2)
-NvdaCanslimParams.getSalesAnnual(-2)
-NvdaCanslimParams.getRoeCurrent()
-NvdaCanslimParams.getEpsGrowthQuarter(-3, -4)
-NvdaCanslimParams.getEpsGrowthAnnual(0, -1)
-NvdaCanslimParams.getStabilityOfEpsGrowth(4)
-NvdaCanslimParams.getEpsGrowthAcceleration(4)
+
+Canslim = {}
+Canslim['Eps_current_Q_per_same_Q_prior_year'] = -99
+Canslim['Sales_current_Q_per_prior_Q'] = -99
+Canslim['Sales_growth_accel_last_3_Q'] = -99
+Canslim['Eps_growth_accel_last_3_Q'] = -99
+Canslim['Stability_of_Q_eps_growth_last_3_years'] = -99
+Canslim['Excellency_of_eps_increase'] = -99
+Canslim['Num_Q_with_eps_growth_deceleration'] = -99
+Canslim['Num_years_annual_eps_increasing_last_3_years'] = -99
