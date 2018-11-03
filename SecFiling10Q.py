@@ -68,7 +68,6 @@ class SecFiling10Q(SecFiling):
                     all_ni_tags.append(tag)
             self.currentSE = self.getCurrentValue(all_se_tags)
             self.currentNI = self.getCurrentValue(all_ni_tags)
-            print("SE: ", self.currentSE, ", NI: ", self.currentNI)
         except:
             if not self.currentSE:
                 self.errorLog.append("Unable to find Stockholders' Equity in filing.")
@@ -130,7 +129,4 @@ class SecFiling10Q(SecFiling):
             return None
         return float(current.text)  
     
-    def printErrors(self):
-        super()
-
 

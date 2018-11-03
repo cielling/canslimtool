@@ -67,7 +67,6 @@ class SecFiling10K(SecFiling):
                     all_ni_tags.append(tag)
             self.currentSE = self.getCurrentValue(all_se_tags)
             self.currentNI = self.getCurrentValue(all_ni_tags)
-            print("SE: ", self.currentSE, ", NI: ", self.currentNI)
         except:
             if not self.currentSE:
                 self.errorLog.append("Unable to find Stockholders' Equity in filing.")
@@ -79,7 +78,6 @@ class SecFiling10K(SecFiling):
         if self.currentSE > 0.0:
             self.currentRoe = self.currentNI / self.currentSE
         return self.currentRoe
-
 
         
     def getCurrentValue(self, tagList):
