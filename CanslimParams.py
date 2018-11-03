@@ -26,7 +26,7 @@ class CanslimParams():
         self.savedContextIds = {}
 
         
-    def loadData(self):
+    def loadData(self, downloadPath = "SECDATA"):
         """Loads the relevant SEC filings for analysis.
         
         Loads the last 4 10-K filings and the last 16(?) 10-Q filings. If necessary, 
@@ -48,7 +48,8 @@ class CanslimParams():
                                         self.all10QsDf.iloc[i].conm, \
                                         self.all10QsDf.iloc[i].type, \
                                         self.all10QsDf.iloc[i].date.strftime("%Y-%m-%f"), \
-                                        self.all10QsDf.iloc[i].path)
+                                        self.all10QsDf.iloc[i].path, \
+                                        downloadPath)
                 ## Load the file into the object instance
                 filing.load(fname)
                 ## Use the year+quarter (for filing date) information to create a key into the dict
@@ -70,7 +71,8 @@ class CanslimParams():
                                         self.all10KsDf.iloc[i].conm, \
                                         self.all10KsDf.iloc[i].type, \
                                         self.all10KsDf.iloc[i].date.strftime("%Y-%m-%f"), \
-                                        self.all10KsDf.iloc[i].path)
+                                        self.all10KsDf.iloc[i].path, \
+                                        downloadPath)
                 ## Load the file into the object instance
                 filing.load(fname)
                 ## Use the year+quarter (for filing date) information to create a key into the dict

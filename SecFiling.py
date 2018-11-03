@@ -38,14 +38,14 @@ class SecFiling(ABC):
         return self.reportDate
         
         
-    def download(self, cik, co_name, filing_type, filing_date, filing_link):
+    def download(self, cik, co_name, filing_type, filing_date, filing_link, downloadPath = "SECDATA"):
         """Retrieves a SEC filing from EDGAR. Follow by a call to 'load()'.
         
         Also a roundabout way of getting the filename for this data file.
         """
         # inspired by http://kaikaichen.com/?p=681
         saveas = '_'.join([cik, co_name, filing_type, str(filing_date)])
-        saveDir = os.path.join("SECDATA", co_name)
+        saveDir = os.path.join(downloadPath, co_name)
         self.fname = os.path.join (saveDir, saveas)
         ## Only download if the file doesn't exist yet (at the expected path)
         if not os.path.exists(self.fname):
