@@ -86,7 +86,7 @@ class CanslimParams():
         return True
     
                 
-    def _getQuarter(self, q):
+    def __getQuarter(self, q):
         """Returns the quarter-key for the requested quarter in the past.
         
         The format of the quarter-key is 'Ynnnn-Qm' and is intended to be used to index into the all10QFilings-dict of 
@@ -109,7 +109,7 @@ class CanslimParams():
         return self.quartersList[abs(q)]
     
     
-    def _getYear(self, y):
+    def __getYear(self, y):
         """Returns the year-key for the requested year in the past.
         
         The format of the year-key is 'Ynnnn' and is intended to be used to index into the all10KFilings-dict of 
@@ -141,7 +141,7 @@ class CanslimParams():
         integers between -15 and 0 are allowed.
         """
         if quarter > -20:
-            qKey = self._getQuarter(quarter)
+            qKey = self.__getQuarter(quarter)
             try:
                 eps = (self.all10QFilings)[qKey].getEps()
                 ## This is annoying, but save the current contextId for use in getSales later
@@ -157,15 +157,15 @@ class CanslimParams():
                 yearEps = self.all10KFilings[year10KKey].getEps()
                 self.savedContextIds[qKey] = self.all10KFilings[year10KKey].getCurrentContextId()
                 
-                last1QKey = self._getQuarter(quarter - 1)
+                last1QKey = self.__getQuarter(quarter - 1)
                 last1Eps = self.all10QFilings[last1QKey].getEps()
                 self.savedContextIds[last1QKey] = self.all10QFilings[last1QKey].getCurrentContextId()
                 
-                last2QKey = self._getQuarter(quarter - 2)
+                last2QKey = self.__getQuarter(quarter - 2)
                 last2Eps = self.all10QFilings[last2QKey].getEps()
                 self.savedContextIds[last2QKey] = self.all10QFilings[last2QKey].getCurrentContextId()
                 
-                last3QKey = self._getQuarter(quarter - 3)
+                last3QKey = self.__getQuarter(quarter - 3)
                 last3Eps = self.all10QFilings[last3QKey].getEps()
                 self.savedContextIds[last3QKey] = self.all10QFilings[last3QKey].getCurrentContextId()
                 
@@ -182,7 +182,7 @@ class CanslimParams():
         integers between -3 and 0 are allowed.
         """
         if year > -5:
-            yKey = self._getYear(year)
+            yKey = self.__getYear(year)
             eps = self.all10KFilings[yKey].getEps()
             self.savedContextIds[yKey] = self.all10KFilings[yKey].getCurrentContextId()
             return eps
@@ -202,7 +202,7 @@ class CanslimParams():
         integers between -15 and 0 are allowed.
         """
         if quarter > -20:
-            qKey = self._getQuarter(quarter)
+            qKey = self.__getQuarter(quarter)
             try:
                 sales = self.all10QFilings[qKey].getSales(self.savedContextIds[qKey])            
             except KeyError:
@@ -213,9 +213,9 @@ class CanslimParams():
                 if (quarter - 3) < -20:
                     return None
                 year10KKey = "Y" + qKey[:4]
-                last1QKey = self._getQuarter(quarter - 1)
-                last2QKey = self._getQuarter(quarter - 2)
-                last3QKey = self._getQuarter(quarter - 3)
+                last1QKey = self.__getQuarter(quarter - 1)
+                last2QKey = self.__getQuarter(quarter - 2)
+                last3QKey = self.__getQuarter(quarter - 3)
                 sales = self.all10KFilings[year10KKey].getSales(self.savedContextIds[year10KKey]) \
                         - self.all10QFilings[last1QKey].getSales(self.savedContextIds[last1QKey]) \
                         - self.all10QFilings[last2QKey].getSales(self.savedContextIds[last2QKey]) \
@@ -232,7 +232,7 @@ class CanslimParams():
         integers between -3 and 0 are allowed.
         """
         if year > -5:
-            yKey = self._getYear(year)
+            yKey = self.__getYear(year)
             return self.all10KFilings[yKey].getSales()
         return None
     
@@ -300,22 +300,22 @@ class CanslimParams():
             y = []
             firstDate = None
             try:
-                firstDate = self.all10QFilings[self._getQuarter(0)].getReportDate()
+                firstDate = self.all10QFilings[self.__getQuarter(0)].getReportDate()
             except:
                 ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
-                firstDate = self.all10KFilings[self._getYear(0)].getReportDate()
+                firstDate = self.all10KFilings[self.__getYear(0)].getReportDate()
             ## create the arrays of EPS vs nDays (from most recent filing) values
             for i in range(0, -numQuarters, -1):
-                qKey = self._getQuarter(i)
+                qKey = self.__getQuarter(i)
                 y.append(self.getEpsQuarter(i))
                 try:
                     x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
                 except:
                     ## Locate the 10-K submitted instead of the 10-Q
                     diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((self.all10KFilings[self._getYear(diff)].getReportDate() - firstDate).days)
-            ## Fit a polynomial of degree 1 through the data: bx + c. Then compute the goodness-of-fit.
-            p = polyfit(x, y, 1)
+                    x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
+            ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
+            p = polyfit(x, y, 2)
             yfit = polyval(p, x)
             sigma = (y - yfit) / y
             error = sigma * sigma
@@ -335,23 +335,23 @@ class CanslimParams():
             y = []
             firstDate = None
             try:
-                firstDate = self.all10QFilings[self._getQuarter(0)].getReportDate()
+                firstDate = self.all10QFilings[self.__getQuarter(0)].getReportDate()
             except:
                 ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
-                firstDate = self.all10KFilings[self._getYear(0)].getReportDate()
+                firstDate = self.all10KFilings[self.__getYear(0)].getReportDate()
             ## create the arrays of EPS vs nDays (from most recent filing) values
             for i in range(0, -numQuarters, -1):
-                qKey = self._getQuarter(i)
+                qKey = self.__getQuarter(i)
                 y.append(self.getEpsQuarter(i))
                 try:
                     x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
                 except:
                     ## Locate the 10-K submitted instead of the 10-Q
                     diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((self.all10KFilings[self._getYear(diff)].getReportDate() - firstDate).days)
+                    x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             p = polyfit(x, y, 2)
-            return p[0]
+            return p
         return None
     
     
@@ -403,23 +403,23 @@ class CanslimParams():
             y = []
             firstDate = None
             try:
-                firstDate = self.all10QFilings[self._getQuarter(0)].getReportDate()
+                firstDate = self.all10QFilings[self.__getQuarter(0)].getReportDate()
             except:
                 ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
-                firstDate = self.all10KFilings[self._getYear(0)].getReportDate()
+                firstDate = self.all10KFilings[self.__getYear(0)].getReportDate()
             ## create the arrays of EPS vs nDays (from most recent filing) values
             for i in range(0, -numQuarters, -1):
-                qKey = self._getQuarter(i)
+                qKey = self.__getQuarter(i)
                 y.append(self.getSalesQuarter(i))
                 try:
                     x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
                 except:
                     ## Locate the 10-K submitted instead of the 10-Q
                     diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((self.all10KFilings[self._getYear(diff)].getReportDate() - firstDate).days)
+                    x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             p = polyfit(x, y, 2)
-            return p[0]
+            return p
         return None
     
     
