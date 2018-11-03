@@ -285,11 +285,11 @@ class CanslimParams():
                 qKey = self._getQuarter(i)
                 y.append(self.getEpsQuarter(i))
                 try:
-                    x.append((firstDate - self.all10QFilings[qKey].getReportDate()).days)
+                    x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
                 except:
                     ## Locate the 10-K submitted instead of the 10-Q
                     diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((firstDate - self.all10KFilings[self._getYear(diff)].getReportDate()).days)
+                    x.append((self.all10KFilings[self._getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 1 through the data: bx + c. Then compute the goodness-of-fit.
             p = polyfit(x, y, 1)
             yfit = polyval(p, x)
@@ -320,11 +320,11 @@ class CanslimParams():
                 qKey = self._getQuarter(i)
                 y.append(self.getEpsQuarter(i))
                 try:
-                    x.append((firstDate - self.all10QFilings[qKey].getReportDate()).days)
+                    x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
                 except:
                     ## Locate the 10-K submitted instead of the 10-Q
                     diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((firstDate - self.all10KFilings[self._getYear(diff)].getReportDate()).days)
+                    x.append((self.all10KFilings[self._getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             p = polyfit(x, y, 2)
             return p[0]
@@ -366,11 +366,11 @@ class CanslimParams():
                 qKey = self._getQuarter(i)
                 y.append(self.getSalesQuarter(i))
                 try:
-                    x.append((firstDate - self.all10QFilings[qKey].getReportDate()).days)
+                    x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
                 except:
                     ## Locate the 10-K submitted instead of the 10-Q
                     diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((firstDate - self.all10KFilings[self._getYear(diff)].getReportDate()).days)
+                    x.append((self.all10KFilings[self._getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             p = polyfit(x, y, 2)
             return p[0]
