@@ -361,7 +361,7 @@ class CanslimParams():
         return None
     
     
-    def getSalesGrowth(self, q1, q2):
+    def getSalesGrowthQuarter(self, q1, q2):
         """Calculates the Sales growth (%) for quarter q1 compared to q2.
         
         The Sales growth is calculated as the ratio Sales(q1)/Sales(q2) * 100%.
