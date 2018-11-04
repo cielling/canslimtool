@@ -24,6 +24,8 @@ class CanslimParams():
         self.all10QFilings = {}
         self.all10KFilings = {}
         self.savedContextIds = {}
+        self.n10Ks = 0
+        self.n10Qs = 0
 
         
     def loadData(self, downloadPath = "SECDATA"):
@@ -83,6 +85,8 @@ class CanslimParams():
                 if self.all10KsDf.iloc[i].date > mostRecentDate:
                     mostRecentDate = self.all10KsDf.iloc[i].date
                     self.currentY = yearKey
+        self.n10Ks = n10Ks
+        self.n10Qs = n10Qs
         return True
     
                 
@@ -92,7 +96,7 @@ class CanslimParams():
         The format of the quarter-key is 'Ynnnn-Qm' and is intended to be used to index into the all10QFilings-dict of 
         SecFiling10Q instances.
         """
-        if abs(q) > 20:
+        if abs(q) > self.n10Qs:
             return None
         if not self.quartersList:
             currentYear = int(self.currentQ.split("-Q")[0])
@@ -100,7 +104,7 @@ class CanslimParams():
             self.quartersList.append(self.currentQ)
             quarter = currentQuarter
             year = currentYear
-            for i in range(0,20):
+            for i in range(0, self.n10Qs):
                 quarter = quarter - 1
                 if quarter < 1:
                     quarter = quarter + 4
@@ -115,11 +119,11 @@ class CanslimParams():
         The format of the year-key is 'Ynnnn' and is intended to be used to index into the all10KFilings-dict of 
         SecFiling10K instances.
         """
-        if abs(y) > 5:
+        if abs(y) > self.n10Ks:
             return None
         if not self.yearsList:
             currentYear = int(self.currentY[1:])
-            for i in range(0,5):
+            for i in range(0, self.n10Ks):
                 year = currentYear - i
                 self.yearsList.append("Y{:d}".format(year))
         return self.yearsList[abs(y)]
@@ -140,7 +144,7 @@ class CanslimParams():
         -1 (minus one) is the previous quarter, etc. For readability, the minus sign is required. Only 
         integers between -15 and 0 are allowed.
         """
-        if quarter > -20:
+        if quarter > -self.n10Qs:
             qKey = self.__getQuarter(quarter)
             try:
                 eps = (self.all10QFilings)[qKey].getEps()
@@ -151,7 +155,7 @@ class CanslimParams():
                 ## So I have to calculate the values for that quarter from the 10-K and preceding 3 10-Q's.
                 ## If the missing Q is Q1, then the preceding 3 10's are from the prior year.
                 ## Make sure we have all the historical data we need:
-                if (quarter - 3) < -20:
+                if (quarter - 3) < -self.n10Qs:
                     return None
                 year10KKey = "Y" + qKey[:4]
                 yearEps = self.all10KFilings[year10KKey].getEps()
@@ -181,7 +185,7 @@ class CanslimParams():
         -1 (minus one) is the previous year, etc. For readability, the minus sign is required. Only 
         integers between -3 and 0 are allowed.
         """
-        if year > -5:
+        if year > -self.n10Ks:
             yKey = self.__getYear(year)
             eps = self.all10KFilings[yKey].getEps()
             self.savedContextIds[yKey] = self.all10KFilings[yKey].getCurrentContextId()
@@ -201,7 +205,7 @@ class CanslimParams():
         -1 (minus one) is the previous quarter, etc. For readability, the minus sign is required. Only 
         integers between -15 and 0 are allowed.
         """
-        if quarter > -20:
+        if quarter > -self.n10Qs:
             qKey = self.__getQuarter(quarter)
             try:
                 sales = self.all10QFilings[qKey].getSales(self.savedContextIds[qKey])            
@@ -210,7 +214,7 @@ class CanslimParams():
                 ## So I have to calculate the values for that quarter from the 10-K and preceding 3 10-Q's.
                 ## If the missing Q is Q1, then the preceding 3 10's are from the prior year.
                 ## Make sure we have all the historical data we need:
-                if (quarter - 3) < -20:
+                if (quarter - 3) < -self.n10Qs:
                     return None
                 year10KKey = "Y" + qKey[:4]
                 last1QKey = self.__getQuarter(quarter - 1)
@@ -231,7 +235,7 @@ class CanslimParams():
         -1 (minus one) is the previous year, etc. For readability, the minus sign is required. Only 
         integers between -3 and 0 are allowed.
         """
-        if year > -5:
+        if year > -self.n10Ks:
             yKey = self.__getYear(year)
             return self.all10KFilings[yKey].getSales()
         return None
@@ -295,7 +299,7 @@ class CanslimParams():
         The stability is calculated as the amount of deviation from the best-fit-line growth. 
         In other words, a line is fitted through the data, and the goodness-of-fit is determined.
         """
-        if numQuarters < 20:
+        if numQuarters < self.n10Qs:
             x = []
             y = []
             firstDate = None
@@ -330,7 +334,7 @@ class CanslimParams():
         The acceleration is calculated as the second derivative of the data. numQuarters is required to 
         be between 2 and 15. At least three quarters are necessary to calculate acceleration.
         """
-        if numQuarters < 20:
+        if numQuarters < self.n10Qs:
             x = []
             y = []
             firstDate = None
@@ -398,7 +402,7 @@ class CanslimParams():
         The acceleration is calculated as the second derivative of the data. numQuarters is required to 
         be between 2 and 15. At least three quarters are necessary to calculate acceleration.
         """
-        if numQuarters < 20:
+        if numQuarters < self.n10Qs:
             x = []
             y = []
             firstDate = None
