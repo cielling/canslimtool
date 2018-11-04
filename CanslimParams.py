@@ -273,24 +273,26 @@ class CanslimParams():
         
     def getEpsGrowthRateQuarter(self, q1, q2):
         """Calculates the growth rate from q1 to q2 as the slope between two points."""
-        date1 = None
-        try:
-            date1 = self.all10QFilings[self.__getQuarter(q1)].getReportDate()
-        except:
-            ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
-            diff = int((self.__getQuarter(q1))[:4]) - int(self.currentY[1:])
-            date1 = self.all10KFilings[self.__getYear(diff)].getReportDate()
-        date2 = None
-        try:
-            date2 = self.all10QFilings[self.__getQuarter(q2)].getReportDate()
-        except:
-            ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
-            diff = int((self.__getQuarter(q2))[:4]) - int(self.currentY[1:])
-            date2 = self.all10KFilings[self.__getYear(diff)].getReportDate()
-        eps1 = self.getEpsQuarter(q1)
-        eps2 = self.getEpsQuarter(q2)
-        rate = self.__slope((date2 - date1).days, 0.0, eps2, eps1)
-        return rate
+        if q1 > -self.n10Qs and q2 > -self.n10Qs:
+            date1 = None
+            try:
+                date1 = self.all10QFilings[self.__getQuarter(q1)].getReportDate()
+            except:
+                ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
+                diff = int((self.__getQuarter(q1))[:4]) - int(self.currentY[1:])
+                date1 = self.all10KFilings[self.__getYear(diff)].getReportDate()
+            date2 = None
+            try:
+                date2 = self.all10QFilings[self.__getQuarter(q2)].getReportDate()
+            except:
+                ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
+                diff = int((self.__getQuarter(q2))[:4]) - int(self.currentY[1:])
+                date2 = self.all10KFilings[self.__getYear(diff)].getReportDate()
+            eps1 = self.getEpsQuarter(q1)
+            eps2 = self.getEpsQuarter(q2)
+            rate = self.__slope((date2 - date1).days, 0.0, eps2, eps1)
+            return rate
+        return None
     
     
     def getStabilityOfEpsGrowth(self, numQuarters):
@@ -376,24 +378,26 @@ class CanslimParams():
      
     def getSalesGrowthRateQuarter(self, q1, q2):
         """Calculates the growth rate from q1 to q2 as the slope between two points."""
-        date1 = None
-        try:
-            date1 = self.all10QFilings[self.__getQuarter(q1)].getReportDate()
-        except:
-            ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
-            diff = int((self.__getQuarter(q1))[:4]) - int(self.currentY[1:])
-            date1 = self.all10KFilings[self.__getYear(diff)].getReportDate()
-        date2 = None
-        try:
-            date2 = self.all10QFilings[self.__getQuarter(q2)].getReportDate()
-        except:
-            ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
-            diff = int((self.__getQuarter(q2))[:4]) - int(self.currentY[1:])
-            date2 = self.all10KFilings[self.__getYear(diff)].getReportDate()
-        sales1 = self.getSalesQuarter(q1)
-        sales2 = self.getSalesQuarter(q2)
-        rate = self.__slope((date2 - date1).days, 0.0, sales2, sales1)
-        return rate
+        if q1 > -self.n10Qs and q2 > -self.n10Qs:
+            date1 = None
+            try:
+                date1 = self.all10QFilings[self.__getQuarter(q1)].getReportDate()
+            except:
+                ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
+                diff = int((self.__getQuarter(q1))[:4]) - int(self.currentY[1:])
+                date1 = self.all10KFilings[self.__getYear(diff)].getReportDate()
+            date2 = None
+            try:
+                date2 = self.all10QFilings[self.__getQuarter(q2)].getReportDate()
+            except:
+                ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
+                diff = int((self.__getQuarter(q2))[:4]) - int(self.currentY[1:])
+                date2 = self.all10KFilings[self.__getYear(diff)].getReportDate()
+            sales1 = self.getSalesQuarter(q1)
+            sales2 = self.getSalesQuarter(q2)
+            rate = self.__slope((date2 - date1).days, 0.0, sales2, sales1)
+            return rate
+        return None
     
     
     def getSalesGrowthAcceleration(self, numQuarters):
