@@ -458,13 +458,13 @@ class CanslimParams():
     
     
     def logErrors(self):
-        with open("{:s}_log.txt".format(self.ticker)) as f:
+        with open("{:s}_log.txt".format(self.ticker), "w+") as f:
             for item in self.all10QFilings:
                 f.write("\n{:s}:\n".format(item))
-                f.write(self.all10QFilings[item].printErrors())
+                f.write(str(self.all10QFilings[item].printErrors()))
             for item in self.all10KFilings:
                 f.write("\n{:s}:\n".format(item))
-                f.write(self.all10KFilings[item].printErrors())
+                f.write(str(self.all10KFilings[item].printErrors()))
                 
                 
     def plotEpsQuarter(self):
