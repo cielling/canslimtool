@@ -194,8 +194,12 @@ class CanslimParams():
     
     
     def getRoeCurrent(self):
-        """Returns the most recent Return on Equity."""
-        return self.all10QFilings[self.currentQ].getRoe()
+        """Returns the Return on Equity over the last four quarters."""
+        roe = 0.0
+        #for i in range(0, -4, -1):
+        #    roe += self.all10QFilings[self.__getQuarter(i)].getRoe()
+        roe = self.all10QFilings[self.currentQ].getRoe()
+        return roe
     
     
     def getSalesQuarter(self, quarter):
