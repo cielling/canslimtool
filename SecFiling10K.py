@@ -6,6 +6,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 from SecFiling import SecFiling
+import traceback
 
 class SecFiling10K(SecFiling):
     def getEps(self):
@@ -43,6 +44,9 @@ class SecFiling10K(SecFiling):
                     if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
                 elif 'us-gaap:SalesRevenuesNet'.lower() == tag.name.strip():
+                    all_sales_tag.append(tag)
+                ## Some of AAPL's statements use this tag:
+                elif 'us-gaap:SalesRevenueNet'.lower() == tag.name.strip():
                     all_sales_tag.append(tag)
         except:
             self.errorLog.append("Unable to find Sales data in filing.")
@@ -84,11 +88,13 @@ class SecFiling10K(SecFiling):
         """Finds the tag for the current date from a list of tags, and returns its value."""
         prevDiff = timedelta(9999, 0, 0) ## days, seconds, microseconds (!)
         prevContextRefLen = 100000
+        current = None
         try:
             for tag in tagList:
                 ## Find the quarter that ended closest to the reportDate, make sure it's a quarter
                 ## TODO: figure out how to do this for the 10-K's
                 contextRef = str((tag.attrs)['contextref'])
+                print("contextRef = ", contextRef)
                 ## The various 'us-gaap:<quantity-of-interest>' tags can occur multiple times for the same time frame,
                 ## but usually distinguish between contextRef names (i.e. the contextref attributes are different, but 
                 ## denote the same time frame). It seems that I generally want the contextRef with the shortest name
@@ -99,32 +105,42 @@ class SecFiling10K(SecFiling):
                 else:
                     tag_dates = self.getStartEndDateForContext(contextRef)
                     self.contextIds[contextRef] = tag_dates
-                diff = self.reportDate - tag_dates[1]
-                ## Find the closest enddate to the ReportDate, i.e. the 'current' date
-                if abs(diff.days) < abs(prevDiff.days): ## found a date closer to the reportDate
-                    prevDiff = diff
-                    ## Reset the length of the contextref string
-                    prevContextRefLen = 100000
-                ## found another candidate, do all the checks
-                if abs(diff.days) <= abs(prevDiff.days): ## found a date closer to the reportDate 
-                    ## If the date is an instantaneous date, only look at the 'diff'
-                    if tag_dates[1] == tag_dates[0]:
-                        if contextRefLen < prevContextRefLen:
-                            prevContextRefLen = contextRefLen
-                            current = tag
-                            prevDiff = diff
-                    ## If a date range is given, make sure it's about a year long
-                    elif abs((tag_dates[1] - tag_dates[0]).days - 365) < 10:
-                        if contextRefLen < prevContextRefLen:
-                            prevContextRefLen = contextRefLen
-                            current = tag
-                            prevDiff = diff
-            self.currentContextId = (current.attrs)['contextref']
+                try:
+                    diff = self.reportDate - tag_dates[1]
+                    ## Find the closest enddate to the ReportDate, i.e. the 'current' date
+                    if abs(diff.days) < abs(prevDiff.days): ## found a date closer to the reportDate
+                        prevDiff = diff
+                        ## Reset the length of the contextref string
+                        prevContextRefLen = 100000
+                    ## found another candidate, do all the checks
+                    if abs(diff.days) <= abs(prevDiff.days): ## found a date closer to the reportDate 
+                        ## If the date is an instantaneous date, only look at the 'diff'
+                        if tag_dates[1] == tag_dates[0]:
+                            if contextRefLen < prevContextRefLen:
+                                prevContextRefLen = contextRefLen
+                                current = tag
+                                prevDiff = diff
+                        ## If a date range is given, make sure it's about a year long
+                        elif abs((tag_dates[1] - tag_dates[0]).days - 365) < 10:
+                            if contextRefLen < prevContextRefLen:
+                                prevContextRefLen = contextRefLen
+                                current = tag
+                                prevDiff = diff
+                except BaseException as be:
+                    print(be)
+                    return None
+            if current:
+                self.currentContextId = (current.attrs)['contextref']
+            else:
+                print("Failed to determine the value for current contextId")
+                print("Received tagList: \n", tagList)
+                print("Stored contextIds: \n",self.contextIds)
+                return None
         except Exception as ex:
             self.errorLog.append("Unable to determine the current value:")
             self.errorLog.append(type(ex).__name__)
             self.errorLog.append(ex)
-            traceback.print_exc()
+            self.errorLog.append(traceback.print_exc())
             return None
         return float(current.text)  
 
