@@ -27,6 +27,22 @@ with engine.connect() as conn, conn.begin():
 ### REMEMBER TO REMOVE TRAILING JUNK FROM SCREENER_RESULTS.XLS FIRST!!! ###
 df = pd.read_excel ("screener_results.xls", header = 0)
 
+## Add the columns we're going to fill out:
+df['Eps_current_Q_per_same_Q_prior_year'] = -99.99
+df['Eps_previous_Q_per_same_Q_prior_year'] = -99.99
+df['Num_years_annual_eps_increasing_last_3_years'] = -99.99
+df['Annual_eps_growth_Y0_Y1'] = -99.99
+df['Annual_eps_growth_Y1_Y2'] = -99.99
+df['Annual_eps_growth_Y2_Y3'] = -99.99
+df['Excellency_of_eps_increase'] = -99.99
+df['Eps_growth_accel_last_3_Q'] = -99.99
+df['Num_Q_with_eps_growth_deceleration'] = -99.99
+df['Current_roe'] = -99.99
+df['Stability_of_eps_growth_last_16_Q'] = -99.99
+df['Eps_growth_accel_last_10_Q'] = -99.99
+df['Sales_current_Q_per_prior_Q'] = -99.99
+df['Sales_growth_accel_last_3_Q'] = -99.99
+
 with open("analysislog.txt", "w") as logfile:
     ## Do the Canslim analysis for each ticker in that file
     ## Keep track of tickers that gave an error
