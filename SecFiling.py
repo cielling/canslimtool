@@ -158,12 +158,28 @@ class SecFiling(ABC):
         This used to be a method under the SecFiling class. For some reason (me, Jupyter notebooks, other), 
         I would get an AttributeError that SecFiling10Q did not have this attribute when calling, e.g. 'getEps()
         on a SecFiling10Q object. So I nested it here under 'getCurrentValue'. """
+        ## Some filings use 'xbrli:context' as the tag
         periodXml = self.xbrlInstance.find("xbrli:context", {"id" : contextRef})
+        ## Some filings just use 'context' as the tag
+        if not periodXml:
+            periodXml = self.xbrlInstance.find("context", {"id" : contextRef})
         if periodXml:
+            ## We found a context-tag, try to determine the dates. Again, some use 'xbrli:<tag>', some just
+            ## use '<tag>'. Also, some contexts are instantaneous ('instant'), and some indicate a date range
+            ## Search for each case, and search for all known variants of the tag names, just in case some
+            ## filings mix between them.
             startdate = periodXml.find("xbrli:startdate") ## or just 'startdate'
+            if not startdate:
+                startdate = periodXml.find("startdate")
             enddate = periodXml.find("xbrli:enddate") ## or just 'enddate'
-            if not startdate and not enddate:
-                startdate = periodXml.find("xbrli:instant") ## instantaneous date, not a date range
+            if not enddate:
+                enddate = periodXml.find("enddate")
+            instant = periodXml.find("xbrli:instant") ## instantaneous date, not a date range
+            if not instant:
+                instant = periodXml.find("instant") ## instantaneous date, not a date range
+            ## Presumably, there is either an 'instant' or a 'startdate' + 'enddate'
+            if instant:
+                startdate = instant
                 enddate = startdate
         else:
             print("ERROR: Unable to find dates for contextref '{:s}'".format(contextRef))
