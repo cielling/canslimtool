@@ -211,9 +211,17 @@ class CanslimParams():
         """
         if quarter > -self.n10Qs:
             qKey = self.__getQuarter(quarter)
+            contextIdKey = ""
             try:
-                sales = self.all10QFilings[qKey].getSales(self.savedContextIds[qKey])            
-            except KeyError:
+                contextIdKey = self.savedContextIds[qKey]
+            except BaseException as be:
+                print(be)
+                print("Unable to find quarter in list of saved Ids:\n{:s}".format(qKey))
+                print(self.savedContextIds)
+            try:
+                sales = self.all10QFilings[qKey].getSales(contextIdKey)            
+            except BaseException as be:
+                print(be)
                 ## Some/most/all? companies submit the 10-K *instead* of the 10-Q for that quarter.
                 ## So I have to calculate the values for that quarter from the 10-K and preceding 3 10-Q's.
                 ## If the missing Q is Q1, then the preceding 3 10's are from the prior year.
@@ -224,10 +232,15 @@ class CanslimParams():
                 last1QKey = self.__getQuarter(quarter - 1)
                 last2QKey = self.__getQuarter(quarter - 2)
                 last3QKey = self.__getQuarter(quarter - 3)
-                sales = self.all10KFilings[year10KKey].getSales(self.savedContextIds[year10KKey]) \
+                try:
+                    sales = self.all10KFilings[year10KKey].getSales(self.savedContextIds[year10KKey]) \
                         - self.all10QFilings[last1QKey].getSales(self.savedContextIds[last1QKey]) \
                         - self.all10QFilings[last2QKey].getSales(self.savedContextIds[last2QKey]) \
                         - self.all10QFilings[last3QKey].getSales(self.savedContextIds[last3QKey])
+                except BaseException as be:
+                    print("Unable to determine sales.")
+                    print(be)
+                    return None
             return sales
         return None
     
