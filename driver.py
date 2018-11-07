@@ -70,18 +70,18 @@ with open("analysislog.txt", "w") as logfile:
             epsGrowth1 = canslim.getEpsGrowthQuarter(0, -4)
             epsGrowth2 = canslim.getEpsGrowthQuarter(-1, -5)
             if not epsGrowth1 or not epsGrowth2:
-                logfile.write(canslim.logErrors())
+                canslim.logErrors()
                 del canslim
                 continue
             else:
-                df['Eps_current_Q_per_same_Q_prior_year'] = epsGrowth1
-                df['Eps_previous_Q_per_same_Q_prior_year'] = epsGrowth2
+                df.loc['Eps_current_Q_per_same_Q_prior_year', symbol] = epsGrowth1
+                df.loc['Eps_previous_Q_per_same_Q_prior_year', symbol] = epsGrowth2
             ## The number of years that the annual EPS increased over the last three years, and the annual growth.
             growth1 = canslim.getEpsGrowthAnnual(0, -1)
             growth2 = canslim.getEpsGrowthAnnual(-1, -2)
             growth3 = canslim.getEpsGrowthAnnual(-2, -3)
             if not growth1 or not growth2 or not growth3:
-                logfile.write(canslim.logErrors())
+                canslim.logErrors()
                 del canslim
                 continue
             else:
@@ -92,10 +92,10 @@ with open("analysislog.txt", "w") as logfile:
                     numYears += 1
                 if growth3 > 0.0:
                     numYears += 1
-                df['Num_years_annual_eps_increasing_last_3_years'] = numYears
-                df['Annual_eps_growth_Y0_Y1'] = growth1
-                df['Annual_eps_growth_Y1_Y2'] = growth2
-                df['Annual_eps_growth_Y2_Y3'] = growth3
+                df.loc['Num_years_annual_eps_increasing_last_3_years', symbol] = numYears
+                df.loc['Annual_eps_growth_Y0_Y1', symbol] = growth1
+                df.loc['Annual_eps_growth_Y1_Y2', symbol] = growth2
+                df.loc['Annual_eps_growth_Y2_Y3', symbol] = growth3
                 count = 0
                 if epsGrowth1 > 0:
                     count += 1
@@ -108,35 +108,17 @@ with open("analysislog.txt", "w") as logfile:
                 if growth2 > growth3:
                     count += 1
                 count + numYears
-                df['Excellency_of_eps_increase'] = count
-                
-            ## Get Sales(current Q)/Sales(same Q prior year), as %
-            salesGrowth = canslim.getSalesGrowthQuarter(0, -4)
-            if not salesGrowth:
-                logfile.write(canslim.logErrors())
-                del canslim
-                continue
-            else:   
-                df['Sales_current_Q_per_prior_Q'] = salesGrowth
+                df.loc['Excellency_of_eps_increase', symbol] = count
                 
             ## Calculate the acceleration of EPS growth for the last three quarters
             epsAcc = canslim.getEpsGrowthAcceleration(3)
-            if not epsAcc:
-                logfile.write(canslim.logErrors())
+            if not epsAcc.all():
+                canslim.logErrors()
                 del canslim
                 continue
             else:
-                df['Eps_growth_accel_last_3_Q'] = epsAcc[0]
+                df.loc['Eps_growth_accel_last_3_Q', symbol] = epsAcc[0]
                 
-            ## Calculate the acceleration of Sales growth for the last three quarters
-            salesAcc = canslim.getSalesGrowthAcceleration(3)
-            if not salesAcc:
-                logfile.write(canslim.logErrors())
-                del canslim
-                continue
-            else: 
-                df['Sales_growth_accel_last_3_Q'] = salesAcc[0]
-
             ## Check if there are two consecutive quarters with EPS deceleration
             totalDecel = 0
             consecutiveDecel = 0
@@ -158,38 +140,58 @@ with open("analysislog.txt", "w") as logfile:
                     else:
                         consecutiveDecel = 0
             if err:
-                logfile.write(canslim.logErrors())
+                canslim.logErrors()
                 del canslim
                 continue
             else:
-                df['Num_Q_with_eps_growth_deceleration'] = totalDecel
+                df.loc['Num_Q_with_eps_growth_deceleration', symbol] = totalDecel
                 
             ## Calculate the ROE of the current quarter
             roe = canslim.getRoeCurrent()
             if not roe:
-                logfile.write(canslim.logErrors())
+                canslim.logErrors()
                 del canslim
                 continue
             else:
-                df['Current_roe'] = roe
+                df.loc['Current_roe', symbol] = roe
                 
             ## Calculate the stability (goodness-of-fit) for the EPS growth over the last 16 quarters
             stability = canslim.getStabilityOfEpsGrowth(16)
             if not stability:
-                logfile.write(canslim.logErrors())
+                canslim.logErrors()
                 del canslim
                 continue
             else:
-                df['Stability_of_eps_growth_last_16_Q'] = stability
+                df.loc['Stability_of_eps_growth_last_16_Q', symbol] = stability
                 
             ## Calculate the EPS growth acceleration over the last 10 quarters
             epsAcc2 = canslim.getEpsGrowthAcceleration(10)
-            if not epsAcc2:
-                logfile.write(canslim.logErrors())
+            if not epsAcc2.all():
+                canslim.logErrors()
                 del canslim
                 continue
             else:
-                df['Eps_growth_accel_last_10_Q'] = epsAcc2[0]
+                df.loc['Eps_growth_accel_last_10_Q', symbol] = epsAcc2[0]
+                
+            ## At this point, all contextIds needed for Sales should be set
+            ## Get Sales(current Q)/Sales(same Q prior year), as %
+            salesGrowth = canslim.getSalesGrowthQuarter(0, -4)
+            if not salesGrowth:
+                canslim.logErrors()
+                del canslim
+                continue
+            else:   
+                df.loc['Sales_current_Q_per_prior_Q', symbol] = salesGrowth
+                
+            ## Calculate the acceleration of Sales growth for the last three quarters
+            salesAcc = canslim.getSalesGrowthAcceleration(3)
+            if not salesAcc.all():
+                canslim.logErrors()
+                del canslim
+                continue
+            else: 
+                df.loc['Sales_growth_accel_last_3_Q', symbol] = salesAcc[0]
+
             print("Successfully analyzed filings for ticker {:s}".format(symbol))
             logfile.write("Successfully analyzed filings for ticker {:s}".format(symbol))
         else:
