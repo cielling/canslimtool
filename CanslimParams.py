@@ -412,7 +412,12 @@ class CanslimParams():
                 date2 = self.all10KFilings[self.__getYear(diff)].getReportDate()
             sales1 = self.getSalesQuarter(q1)
             sales2 = self.getSalesQuarter(q2)
-            rate = self.__slope((date2 - date1).days, 0.0, sales2, sales1)
+            try:
+                rate = self.__slope((date2 - date1).days, 0.0, sales2, sales1)
+            except BaseException as be:
+                print("Unable to determine sales growth rate.")
+                print(be)
+                return None
             return rate
         return None
     
@@ -435,7 +440,11 @@ class CanslimParams():
             ## create the arrays of EPS vs nDays (from most recent filing) values
             for i in range(0, -numQuarters, -1):
                 qKey = self.__getQuarter(i)
-                y.append(self.getSalesQuarter(i))
+                sales = self.getSalesQuarter(i)
+                if not sales:
+                    print("Unable to get the sales data for this quarter: {:d}".format(i))
+                    return None
+                y.append(sales)
                 try:
                     x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
                 except:
