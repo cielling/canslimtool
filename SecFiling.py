@@ -65,7 +65,7 @@ class SecFiling(ABC):
         ## TODO: Do I need to have the whole file in memory?
         wholeFile = f.read ()
         f.close ()
-        soup = BSoup (wholeFile, "html.parser")
+        soup = BSoup (wholeFile, "lxml")
         ## Extract some basic info from the SEC-header section
         sec_header = soup.find("sec-header")
         try:
