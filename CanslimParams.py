@@ -157,23 +157,28 @@ class CanslimParams():
                 ## Make sure we have all the historical data we need:
                 if (quarter - 3) < -self.n10Qs:
                     return None
-                year10KKey = "Y" + qKey[:4]
-                yearEps = self.all10KFilings[year10KKey].getEps()
-                self.savedContextIds[qKey] = self.all10KFilings[year10KKey].getCurrentContextId()
-                
-                last1QKey = self.__getQuarter(quarter - 1)
-                last1Eps = self.all10QFilings[last1QKey].getEps()
-                self.savedContextIds[last1QKey] = self.all10QFilings[last1QKey].getCurrentContextId()
-                
-                last2QKey = self.__getQuarter(quarter - 2)
-                last2Eps = self.all10QFilings[last2QKey].getEps()
-                self.savedContextIds[last2QKey] = self.all10QFilings[last2QKey].getCurrentContextId()
-                
-                last3QKey = self.__getQuarter(quarter - 3)
-                last3Eps = self.all10QFilings[last3QKey].getEps()
-                self.savedContextIds[last3QKey] = self.all10QFilings[last3QKey].getCurrentContextId()
-                
-                eps = yearEps - last1Eps - last2Eps - last3Eps
+                try:
+                    year10KKey = "Y" + qKey[:4]
+                    yearEps = self.all10KFilings[year10KKey].getEps()
+                    self.savedContextIds[qKey] = self.all10KFilings[year10KKey].getCurrentContextId()
+                    
+                    last1QKey = self.__getQuarter(quarter - 1)
+                    last1Eps = self.all10QFilings[last1QKey].getEps()
+                    self.savedContextIds[last1QKey] = self.all10QFilings[last1QKey].getCurrentContextId()
+                    
+                    last2QKey = self.__getQuarter(quarter - 2)
+                    last2Eps = self.all10QFilings[last2QKey].getEps()
+                    self.savedContextIds[last2QKey] = self.all10QFilings[last2QKey].getCurrentContextId()
+                    
+                    last3QKey = self.__getQuarter(quarter - 3)
+                    last3Eps = self.all10QFilings[last3QKey].getEps()
+                    self.savedContextIds[last3QKey] = self.all10QFilings[last3QKey].getCurrentContextId()
+                    
+                    eps = yearEps - last1Eps - last2Eps - last3Eps
+                except BaseException as be:
+                    print("Unable to infer EPS from the last few filings.")
+                    print(be)
+                    return None
             return eps
         return None
     
