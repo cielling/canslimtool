@@ -36,7 +36,6 @@ class SecFiling10Q(SecFiling):
                 return -99.0
             else:
                 contextId = self.currentContextId
-        print("Looking for contextId = {:s}".format(contextId))
         all_sales_tags = []
         try:
             for tag in self.all_tags:
@@ -46,14 +45,15 @@ class SecFiling10Q(SecFiling):
                     if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
                 elif 'us-gaap:SalesRevenuesNet'.lower() == tag.name.strip():
-                    all_sales_tag.append(tag)
+                    if (tag.attrs)['contextref'] == contextId:
+                        all_sales_tags.append(tag)
                 ## Some of AAPL's statements use this tag:
                 elif 'us-gaap:salesrevenuenet'.lower() == tag.name.strip():
-                    all_sales_tag.append(tag)
-                else:
-                    print(tag.name.strip())
-        except:
+                    if (tag.attrs)['contextref'] == contextId:
+                        all_sales_tags.append(tag)
+        except BaseException as be:
             self.errorLog.append("Unable to find Sales data in filing.")
+            print(be)
             return None
         self.currentSales = self.getCurrentValue(all_sales_tags) 
         return self.currentSales
@@ -98,7 +98,6 @@ class SecFiling10Q(SecFiling):
                 ## Find the quarter that ended closest to the reportDate, make sure it's a quarter
                 ## TODO: figure out how to do this for the 10-K's
                 contextRef = str((tag.attrs)['contextref'])
-                print("contextRef = ", contextRef)
                 ## The various 'us-gaap:<quantity-of-interest>' tags can occur multiple times for the same time frame,
                 ## but usually distinguish between contextRef names (i.e. the contextref attributes are different, but 
                 ## denote the same time frame). It seems that I generally want the contextRef with the shortest name

@@ -37,19 +37,22 @@ class SecFiling10K(SecFiling):
                 contextId = self.currentContextId
         all_sales_tags = []
         try:
-            for tag in self.all_tags:
+            for tag in self.all_tags:                
                 ## The filings seem to use either 'Revenues' or 'SalesRevenuesNet' to indicate the net sales amount
                 ## But the 'Revenues' tag also contains other stuff, need to filter it by its contextref attribute
                 if 'us-gaap:Revenues'.lower() == tag.name.strip():
                     if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
                 elif 'us-gaap:SalesRevenuesNet'.lower() == tag.name.strip():
-                    all_sales_tag.append(tag)
+                    if (tag.attrs)['contextref'] == contextId:
+                        all_sales_tags.append(tag)
                 ## Some of AAPL's statements use this tag:
-                elif 'us-gaap:SalesRevenueNet'.lower() == tag.name.strip():
-                    all_sales_tag.append(tag)
-        except:
+                elif 'us-gaap:salesrevenuenet'.lower() == tag.name.strip():
+                    if (tag.attrs)['contextref'] == contextId:
+                        all_sales_tags.append(tag)
+        except BaseException as be:
             self.errorLog.append("Unable to find Sales data in filing.")
+            print(be)
             return None
         self.currentSales = self.getCurrentValue(all_sales_tags) 
         return self.currentSales
@@ -94,7 +97,6 @@ class SecFiling10K(SecFiling):
                 ## Find the quarter that ended closest to the reportDate, make sure it's a quarter
                 ## TODO: figure out how to do this for the 10-K's
                 contextRef = str((tag.attrs)['contextref'])
-                print("contextRef = ", contextRef)
                 ## The various 'us-gaap:<quantity-of-interest>' tags can occur multiple times for the same time frame,
                 ## but usually distinguish between contextRef names (i.e. the contextref attributes are different, but 
                 ## denote the same time frame). It seems that I generally want the contextRef with the shortest name
