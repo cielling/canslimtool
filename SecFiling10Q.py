@@ -32,7 +32,7 @@ class SecFiling10Q(SecFiling):
         figure out the currentContextRef by itself."""
         if not contextId:
             if not self.currentContextId:
-                print("ERROR! current contextId is not set!")
+                self.errorLog.append("ERROR! current contextId is not set!")
                 return -99.0
             else:
                 contextId = self.currentContextId
@@ -53,7 +53,7 @@ class SecFiling10Q(SecFiling):
                         all_sales_tags.append(tag)
         except BaseException as be:
             self.errorLog.append("Unable to find Sales data in filing.")
-            print(be)
+            self.errorLog.append(be)
             return None
         self.currentSales = self.getCurrentValue(all_sales_tags) 
         return self.currentSales
@@ -83,7 +83,7 @@ class SecFiling10Q(SecFiling):
             return None
         ## Return on equity = net income / stockholders' equity
         self.currentRoe = 0.0
-        if self.currentSE > 0.0:
+        if self.currentSE and self.currentSE > 0.0:
             self.currentRoe = self.currentNI / self.currentSE
         return self.currentRoe
       
@@ -130,14 +130,14 @@ class SecFiling10Q(SecFiling):
                                 current = tag
                                 prevDiff = diff
                 except BaseException as be:
-                    print(be)
+                    self.errorLog.append(be)
                     return None
             if current:
                 self.currentContextId = (current.attrs)['contextref']
             else:
-                print("Failed to determine the value for current contextId:")
-                print("Received tagList: \n", tagList)
-                print("Stored contextIds: \n",self.contextIds)
+                self.errorLog.append("Failed to determine the value for current contextId:")
+                self.errorLog.append("Received tagList: \n" + str(tagList))
+                self.errorLog.append("Stored contextIds: \n" + str(self.contextIds))
                 return None
         except Exception as ex:
             self.errorLog.append("Unable to determine the current value:")
