@@ -54,7 +54,12 @@ class CanslimParams():
                                         self.all10QsDf.iloc[i].path, \
                                         downloadPath)
                 ## Load the file into the object instance
-                filing.load(fname)
+                try:
+                    filing.load(fname)
+                except BaseException as be:
+                    self.errorLog.append("Unable to open filing {:s}.".format(fname))
+                    self.errorLog.append(be)
+                    return False
                 ## Use the year+quarter (for filing date) information to create a key into the dict
                 quarterKey = "{:d}-Q{:d}".format(self.all10QsDf.iloc[i].date.year, int(self.all10QsDf.iloc[i].date.month / 3 + 1))
                 ## TODO: verify that each filing was successfully loaded
@@ -77,7 +82,12 @@ class CanslimParams():
                                         self.all10KsDf.iloc[i].path, \
                                         downloadPath)
                 ## Load the file into the object instance
-                filing.load(fname)
+                try:
+                    filing.load(fname)
+                except BaseException as be:
+                    self.errorLog.append("Unable to open filing {:s}.".format(fname))
+                    self.errorLog.append(be)
+                    return False
                 ## Use the year+quarter (for filing date) information to create a key into the dict
                 yearKey = "Y{:d}".format(self.all10KsDf.iloc[i].date.year)
                 ## TODO: verify that each filing was successfully loaded
