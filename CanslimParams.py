@@ -26,6 +26,7 @@ class CanslimParams():
         self.savedContextIds = {}
         self.n10Ks = 0
         self.n10Qs = 0
+        self.errorLog = []
 
         
     def loadData(self, downloadPath = "SECDATA"):
@@ -176,8 +177,8 @@ class CanslimParams():
                     
                     eps = yearEps - last1Eps - last2Eps - last3Eps
                 except BaseException as be:
-                    print("Unable to infer EPS from the last few filings.")
-                    print(be)
+                    self.errorLog.append("Unable to infer EPS from the last few filings for quarter {:s}.".format(qKey))
+                    self.errorLog.append(be)
                     return None
             return eps
         return None
@@ -220,13 +221,14 @@ class CanslimParams():
             try:
                 contextIdKey = self.savedContextIds[qKey]
             except BaseException as be:
-                print(be)
-                print("Unable to find quarter in list of saved Ids:\n{:s}".format(qKey))
-                print(self.savedContextIds)
+                self.errorLog.append(be)
+                self.errorLog.append("Unable to find quarter in list of saved Ids:\n{:s}".format(qKey))
+                self.errorLog.append(self.savedContextIds)
             try:
                 sales = self.all10QFilings[qKey].getSales(contextIdKey)            
             except BaseException as be:
-                print(be)
+                self.errorLog.append("Error getting Sales for quarter {:s}. The filing may not exist, falling on inferring sales from the last few filings.". format(qKey))
+                self.errorLog.append(be)
                 ## Some/most/all? companies submit the 10-K *instead* of the 10-Q for that quarter.
                 ## So I have to calculate the values for that quarter from the 10-K and preceding 3 10-Q's.
                 ## If the missing Q is Q1, then the preceding 3 10's are from the prior year.
@@ -243,8 +245,8 @@ class CanslimParams():
                         - self.all10QFilings[last2QKey].getSales(self.savedContextIds[last2QKey]) \
                         - self.all10QFilings[last3QKey].getSales(self.savedContextIds[last3QKey])
                 except BaseException as be:
-                    print("Unable to determine sales.")
-                    print(be)
+                    self.errorLog.append("Unable to determine sales.")
+                    self.errorLog.append(be)
                     return None
             return sales
         return None
@@ -273,7 +275,7 @@ class CanslimParams():
         try:
             growth = (epsQ1 / epsQ2) * 100.
         except:
-            print("Unable to determine quarterly EPS growth.")
+            self.errorLog.append("Unable to determine quarterly EPS growth between quarters {:d} and {:d}.".format(q1, q1))
             growth = None
         return growth
     
@@ -288,7 +290,7 @@ class CanslimParams():
         try:
             growth = (epsY1 / epsY2) * 100.
         except:
-            print("Unable to determine quarterly EPS growth.")
+            self.errorLog.append("Unable to determine annual EPS growth between years {:d} and {:d}.".format(a1, a2))
             growth = None
         return growth
         
@@ -393,7 +395,7 @@ class CanslimParams():
         try:
             growth = (salesQ1 / salesQ2) * 100.
         except:
-            print("Unable to determine quarterly Sales growth.")
+            self.errorLog.append("Unable to determine quarterly Sales growth between quarters {:d} and {:d}.".format(q1, q2))
             growth = None
         return growth
      
@@ -420,8 +422,8 @@ class CanslimParams():
             try:
                 rate = self.__slope((date2 - date1).days, 0.0, sales2, sales1)
             except BaseException as be:
-                print("Unable to determine sales growth rate.")
-                print(be)
+                self.errorLog.append("Unable to determine sales growth rate between quarters {:d} and {:d}.".format(q1, q2))
+                self.errorLog.append(be)
                 return None
             return rate
         return None
@@ -447,7 +449,7 @@ class CanslimParams():
                 qKey = self.__getQuarter(i)
                 sales = self.getSalesQuarter(i)
                 if not sales:
-                    print("Unable to get the sales data for this quarter: {:d}".format(i))
+                    self.errorLog.append("Unable to get the sales data for this quarter: {:d}".format(i))
                     return None
                 y.append(sales)
                 try:
@@ -464,6 +466,8 @@ class CanslimParams():
     
     def logErrors(self):
         with open("{:s}_log.txt".format(self.ticker), "w+") as f:
+            for item in self.errorLog:
+                f.write(item)
             for item in self.all10QFilings:
                 f.write("\n{:s}:\n".format(item))
                 f.write(str(self.all10QFilings[item].printErrors()))
