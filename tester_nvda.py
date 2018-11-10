@@ -5,10 +5,12 @@ from bs4 import BeautifulSoup as BSoup
 from CanslimParams import CanslimParams
 
 def areEqual(expect, val, eps = 0.01):
-    diff = abs(float(val) / float(expect) - 1.0)
-    assert diff < eps, "Values don't match, expected= {:.12f}, found= {:.12f}, diff= {:.12f}.\n".format(expect, val, diff)
-    assert expect * val >= 0.0, "Values don't have the same sign: expected= {:f}, found= {:f}.\n".format(expect, val)
-
+    try:
+        diff = abs(float(val) / float(expect) - 1.0)
+        assert diff < eps, "Values don't match, expected= {:.12f}, found= {:.12f}, diff= {:.12f}.\n".format(expect, val, diff)
+        assert expect * val >= 0.0, "Values don't have the same sign: expected= {:f}, found= {:f}.\n".format(expect, val)
+    except BaseException as be:
+        print(be)
 
 all10Ks = pd.read_csv("TestData\\nvda_all_10ks.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
 all10Qs = pd.read_csv("TestData\\nvda_all_10qs.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
@@ -90,7 +92,7 @@ if NvdaCanslimParams.loadData("TestData"):
     
     print("Getting sales growth between Q0 and Q-2:")
     expect = 3123.0/(2911.)*100.
-    val = NvdaCanslimParams.getSalesGrowth(0, -2)
+    val = NvdaCanslimParams.getSalesGrowthQuarter(0, -2)
     areEqual(expect, val)
     
     print("Getting sales growth rate between Q0 and Q-2:")
