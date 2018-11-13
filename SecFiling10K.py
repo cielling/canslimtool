@@ -70,6 +70,8 @@ class SecFiling10K(SecFiling):
             for tag in self.all_tags:
                 if 'us-gaap:StockholdersEquity'.lower() == tag.name.strip():
                     all_se_tags.append(tag)
+                elif 'us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest'.lower() == tag.name.strip():
+                    all_se_tags.append(tag)
                 if 'us-gaap:NetIncomeLoss'.lower() == tag.name.strip():
                     all_ni_tags.append(tag)
             self.currentSE = self.getCurrentValue(all_se_tags)
