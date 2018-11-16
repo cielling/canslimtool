@@ -55,6 +55,8 @@ class SecFiling10Q(SecFiling):
             self.errorLog.append("Unable to find Sales data in filing.")
             self.errorLog.append(be)
             return None
+        if not all_sales_tags:
+            self.errorLog.append("Sales/Revenue information not found.")
         self.currentSales = self.getCurrentValue(all_sales_tags) 
         return self.currentSales
     
@@ -75,6 +77,12 @@ class SecFiling10Q(SecFiling):
                     all_se_tags.append(tag)
                 if 'us-gaap:NetIncomeLoss'.lower() == tag.name.strip():
                     all_ni_tags.append(tag)
+                elif 'us-gaap:NetIncomeLossAvailableToCommonStockholdersBasic'.lower() == tag.name.strip():
+                    all_ni_tags.append(tag)
+            if not all_se_tags:
+                self.errorLog.append("Stockholders' equity information not found.")
+            if not all_ni_tags:
+                self.errorLog.append("Net income information not found.")
             self.currentSE = self.getCurrentValue(all_se_tags)
             self.currentNI = self.getCurrentValue(all_ni_tags)
         except:
