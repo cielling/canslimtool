@@ -285,7 +285,7 @@ class CanslimParams():
         try:
             growth = (epsQ1 / epsQ2) * 100.
         except:
-            self.errorLog.append("Unable to determine quarterly EPS growth between quarters {:d} and {:d}.".format(q1, q1))
+            self.errorLog.append("Unable to determine quarterly EPS growth between quarters {:d} and {:d}.".format(q1, q2))
             growth = None
         return growth
     
