@@ -186,7 +186,7 @@ class SecFiling(ABC):
                 startdate = instant
                 enddate = startdate
         else:
-            print("ERROR: Unable to find dates for contextref '{:s}'".format(contextRef))
+            self.errorLog.append("ERROR: Unable to find dates for contextref '{:s}'".format(contextRef))
             return None
         try:
             sd = datetime.strptime(startdate.text, "%Y-%m-%d")
@@ -204,5 +204,5 @@ class SecFiling(ABC):
         
         
     def printErrors(self):
-        print("\n".join(e for e in self.errorLog))
+        print(", ".join(str(e) for e in self.errorLog))
             
