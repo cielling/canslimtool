@@ -87,6 +87,10 @@ class SecFiling(ABC):
                 if (description.startswith("xbrl instance document")):
                     self.xbrlInstance = tag
                     break
+                ## Sometimes the description seems to be (mis-)named by the default instance document file named.
+                ## Don't 'break', to give the first if statement priority.
+                elif description.startswith("EX-101.INS".lower()):
+                    self.xbrlInstance = tag
         except:
             self.errorLog.append("Unable to find document-tags in file.")
             return False
