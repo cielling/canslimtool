@@ -324,7 +324,12 @@ class CanslimParams():
                 date2 = self.all10KFilings[self.__getYear(diff)].getReportDate()
             eps1 = self.getEpsQuarter(q1)
             eps2 = self.getEpsQuarter(q2)
-            rate = self.__slope((date2 - date1).days, 0.0, eps2, eps1)
+            try:
+                rate = self.__slope((date2 - date1).days, 0.0, eps2, eps1)
+            except BaseException as be:
+                self.errorLog.append("Unable to determine quarterly EPS growth rate for quarters {:s} and {:s}.".format(str(q1), str(q2)))
+                self.errorLog.append(str(be))
+                return None
             return rate
         return None
     
