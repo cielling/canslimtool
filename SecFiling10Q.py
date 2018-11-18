@@ -59,43 +59,6 @@ class SecFiling10Q(SecFiling):
             self.errorLog.append("Sales/Revenue information not found.")
         self.currentSales = self.getCurrentValue(all_sales_tags) 
         return self.currentSales
-    
-    
-    def getRoe(self):
-        """Retrieves the current Return on Equity from the filing."""
-        ## First find the stockholders' equity
-        all_se_tags = []
-        ## Then find the net income
-        all_ni_tags = []
-        self.currentSE = None
-        self.currentNI = None
-        try:
-            for tag in self.all_tags:
-                if 'us-gaap:StockholdersEquity'.lower() == tag.name.strip():
-                    all_se_tags.append(tag)
-                elif 'us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest'.lower() == tag.name.strip():
-                    all_se_tags.append(tag)
-                if 'us-gaap:NetIncomeLoss'.lower() == tag.name.strip():
-                    all_ni_tags.append(tag)
-                elif 'us-gaap:NetIncomeLossAvailableToCommonStockholdersBasic'.lower() == tag.name.strip():
-                    all_ni_tags.append(tag)
-            if not all_se_tags:
-                self.errorLog.append("Stockholders' equity information not found.")
-            if not all_ni_tags:
-                self.errorLog.append("Net income information not found.")
-            self.currentSE = self.getCurrentValue(all_se_tags)
-            self.currentNI = self.getCurrentValue(all_ni_tags)
-        except:
-            if not self.currentSE:
-                self.errorLog.append("Unable to find Stockholders' Equity in filing.")
-            if not self.currentNI:
-                self.errorLog.append("Unable to find Net Income in filing.")
-            return None
-        ## Return on equity = net income / stockholders' equity
-        self.currentRoe = 0.0
-        if self.currentSE and self.currentSE > 0.0:
-            self.currentRoe = self.currentNI / self.currentSE
-        return self.currentRoe
       
     
     def getCurrentValue(self, tagList):
