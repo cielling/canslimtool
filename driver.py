@@ -3,6 +3,7 @@ import pandas as pd
 import sqlite3
 from bs4 import BeautifulSoup as BSoup
 from datetime import datetime
+import os
 
 from MyEdgarDb import get_list_sec_filings, get_cik_ticker_lookup_db
 from CanslimParams import CanslimParams
@@ -11,24 +12,39 @@ tStart = datetime.now()
 
 ## Update the idx and cik_ticker_name tables in the database
 print("Updating master index.")
-#get_list_sec_filings ()
+get_list_sec_filings ()
 print("Updating CIK-ticker lookup table.")
-#get_cik_ticker_lookup_db ()
+get_cik_ticker_lookup_db ()
 
 ## Read in the screener_results.xls file
 ### REMEMBER TO REMOVE TRAILING JUNK FROM SCREENER_RESULTS.XLS FIRST!!! ###
 df = pd.read_excel ("screener_results.xls", header = 0)
+## Guarantee that the spreadsheet is sorted alphabetically by ticker symbol, and that the index
+## is monotonically increasing.
+df.sort_values('Symbol', inplace = True)
+df.reset_index(drop = True)
+
+## See if a previous analysis-log exists. If it does, assume this is a restart
+## from it. If not, do a new analysis run.
+if os.path.exists("analysislog.txt"):
+    mode = "r+"
+    newRun = False
+else:
+    mode = "w"
+    newRun = True
 
 ## Load the database of index file names to generate url
 print("Loading edgar_idx.db. This could take a while.")
 with sqlite3.connect('edgar_idx.db') as conn:
     cursor = conn.cursor()
-    with open("analysislog.txt", "r+") as logfile:
+    with open("analysislog.txt", mode) as logfile:
         with open("analysiserrors.txt", "w") as errorlog:
             ## Keep a log of all the files that were processed. Check if there 
             ## are any tickers that were already processed and can be skipped.
-            processed = logfile.readlines()
-            newRun = (len(processed) == 0)
+            ## If there are no records in the analysis-log file, treat this as a new run.
+            if not newRun:
+                processed = logfile.readlines()
+                newRun = (len(processed) == 0)
             if newRun:
                 ## Add the columns we're going to fill out:
                 df['Eps_current_Q_per_same_Q_prior_year'] = -99.99
@@ -48,7 +64,8 @@ with sqlite3.connect('edgar_idx.db') as conn:
             else:
                 lastTicker = processed[-1].split(" ")[1]
                 print("Starting from ticker {:s}".format(lastTicker))
-                nextIndex = df[df.Symbol == lastTicker].index + 1
+                ## Re-process the last ticker, in case it was interrupted and didn't finish.
+                nextIndex = df[df.Symbol == lastTicker].index
                 print("Starting at index {:s}".format(str(nextIndex)))
             ## Do the Canslim analysis for each ticker in that file
             ## Keep track of tickers that gave an error
