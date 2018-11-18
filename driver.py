@@ -4,9 +4,14 @@ import sqlite3
 from bs4 import BeautifulSoup as BSoup
 from datetime import datetime
 import os
+from sys import args
 
 from MyEdgarDb import get_list_sec_filings, get_cik_ticker_lookup_db
 from CanslimParams import CanslimParams
+
+runOnce = False
+if "runonce" in args:
+    runOnce = True
 
 tStart = datetime.now()
 
@@ -244,6 +249,8 @@ with sqlite3.connect('edgar_idx.db') as conn:
                 else:
                     errorlog.write("Unable to open filings for {:s}".format(symbol))
                     del canslim
+            if runOnce:
+                break
 
 tEnd = datetime.now()
 print("Runtime was {:d} sec.".format((tEnd - tStart).seconds))
