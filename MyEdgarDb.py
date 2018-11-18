@@ -56,6 +56,9 @@ def get_cik_ticker_lookup_db ():
     from sqlalchemy import create_engine
     import pandas as pd
 
+    ## First, go to http://rankandfiled.com/#/data/tickers and download the current table 
+    ## as CSV into this directory.
+
     #read in the cik-ticker-company name lookup table
     df = pd.read_csv ("cik_ticker.csv", sep='|')
     #print (df.columns)
@@ -78,6 +81,9 @@ def get_cik_ticker_lookup_db ():
                    "{}".format (lookup_table_df.Name.iloc[i]))
                        )
         counter += 1
+    ## Note that the CSV file does not include all tickers. Append these manually, and/or find a better way to handle this.
+    records.append("1577552", "BABA", "Alibaba Group Holding Ltd")
+    
     #print (records)
     #insert data into the table
     cur.executemany ('INSERT INTO cik_ticker_name VALUES (?, ?, ?)', records)
