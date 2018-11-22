@@ -6,9 +6,10 @@ from datetime import datetime
 import os
 from sys import argv
 
-from MyEdgarDb import get_list_sec_filings, get_cik_ticker_lookup_db
+from MyEdgarDb import get_list_sec_filings, get_cik_ticker_lookup_db, lookup_cik_ticker
 from CanslimParams import CanslimParams
 
+## TODO: (some) foreign companies submit a 20-F instead of a 10-K
 runOnce = False
 if "runonce" in argv:
     runOnce = True
@@ -17,26 +18,29 @@ tStart = datetime.now()
 
 ## Update the idx and cik_ticker_name tables in the database
 print("Updating master index.")
-get_list_sec_filings ()
+#get_list_sec_filings ()
 print("Updating CIK-ticker lookup table.")
-get_cik_ticker_lookup_db ()
-
-## Read in the screener_results.xls file
-### REMEMBER TO REMOVE TRAILING JUNK FROM SCREENER_RESULTS.XLS FIRST!!! ###
-df = pd.read_excel ("screener_results.xls", header = 0)
-## Guarantee that the spreadsheet is sorted alphabetically by ticker symbol, and that the index
-## is monotonically increasing.
-df.sort_values('Symbol', inplace = True)
-df.reset_index(drop = True)
+#get_cik_ticker_lookup_db ()
 
 ## See if a previous analysis-log exists. If it does, assume this is a restart
 ## from it. If not, do a new analysis run.
 if os.path.exists("analysislog.txt"):
     mode = "r+"
     newRun = False
+    screenerResultsFile = "screener_results_analysis.xls"
 else:
     mode = "w"
     newRun = True
+    screenerResultsFile = "screener_results.xls"
+    
+## Read in the screener_results.xls file
+### REMEMBER TO REMOVE TRAILING JUNK FROM SCREENER_RESULTS.XLS FIRST!!! ###
+df = pd.read_excel (screenerResultsFile, header = 0)
+## Guarantee that the spreadsheet is sorted alphabetically by ticker symbol, and that the index
+## is monotonically increasing.
+df.sort_values('Symbol', inplace = True)
+df.reset_index(drop = True)
+print(df.size)
 
 ## Load the database of index file names to generate url
 print("Loading edgar_idx.db. This could take a while.")
