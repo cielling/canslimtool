@@ -71,14 +71,15 @@ with sqlite3.connect('edgar_idx.db') as conn:
                 df['Sales_current_Q_per_prior_Q'] = -99.99
                 df['Sales_growth_accel_last_3_Q'] = -99.99
             else:
-                lastTicker = processed[-1].split(" ")[1]
+                lastTicker = processed[-1].split(" ")[1].strip()
                 print("Starting from ticker {:s}".format(lastTicker))
                 ## Re-process the last ticker, in case it was interrupted and didn't finish.
-                nextIndex = df[df.Symbol == lastTicker].index
-                print("Starting at index {:s}".format(str(nextIndex)))
+                nextLine = df[df.Symbol == lastTicker]
+                nextIndex = nextLine.index[0]
+                print("Starting at index {}".format(nextIndex))
             ## Do the Canslim analysis for each ticker in that file
             ## Keep track of tickers that gave an error
-            for symbol in df.Symbol:
+            for symbol in df.Symbol.sort_values():
                 ## If we're starting from an unfinished previous analysis run, skip those
                 ## tickers that were already processed
                 symbolIdx = df[df.Symbol == symbol].index[0]
