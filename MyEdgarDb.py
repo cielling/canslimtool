@@ -90,3 +90,37 @@ def get_cik_ticker_lookup_db ():
 
     con.commit ()
     con.close ()
+    
+    
+def lookup_cik_ticker(ticker):
+    import requests
+    import sys
+    from bs4 import BeautifulSoup as BSoup
+    
+    req = requests.get(\
+        "https://www.sec.gov/cgi-bin/browse-edgar?CIK={:s}&owner=exclude&action=getcompany&Find=Search"\
+        .format(ticker.lower()))
+    ## Check for errors encountered in trying to get that url.
+    try:
+        req.raise_for_status ()
+    except:
+        print(" -- {}:\n\t\t{}".format (sys.exc_info ()[0], req.url))
+        return None
+    soup = BSoup(req.content, "lxml")
+    ## Search for the tag that contains the company name.
+    conmTag = soup.find("span", {"class": "companyName"})
+    if not conmTag:
+        print("Unable to find the company name for ticker {:s}.".format(ticker))
+        return None
+    ## Search for the a-ref tag that links to "all company filings". Its text contains the CIK.
+    atags = soup.findAll("a")
+    atagCik = None
+    for t in atags:
+        if "see all company filings" in t.text:
+            atagCik = t
+    if not atagCik:
+        print("Unable to find the a-ref tag with the CIK for ticker {:s}.".format(ticker))
+        return None
+    cik = atagCik.text.split(" ")[0]
+    conm = conmTag.text.split("CIK")[0].strip()
+    return (str(cik), ticker, str(conm))
