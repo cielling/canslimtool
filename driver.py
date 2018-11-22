@@ -94,13 +94,25 @@ with sqlite3.connect('edgar_idx.db') as conn:
                 ## First, look up the CIK for the ticker symbol
                 cursor.execute('''SELECT * FROM cik_ticker_name WHERE ticker=?;''',(symbol,))
                 res = cursor.fetchall()
-                try: 
-                    cik = res[0][0]
-                except BaseException as be:
-                    print("Unable to locate CIK for ticker {:s}.".format(symbol))
-                    print("Record in database: {:s}".format(str(res)))
-                    print(be)
-                    continue
+                ## If this ticker is not in the lookup database, try to search on the web.
+                if not res:
+                    record = lookup_cik_ticker(symbol)
+                    if not record:
+                        print("Unsuccessful.")
+                        continue
+                    #insert data into the table
+                    cursor.execute ('INSERT INTO cik_ticker_name VALUES (?, ?, ?)', record)
+                    conn.commit ()
+                    cik = record[0]
+                    print(cik)
+                else:
+                    try: 
+                        cik = res[0][0]
+                    except BaseException as be:
+                        errorlog.write("Unable to locate CIK for ticker {:s}.".format(symbol))
+                        errorlog.write("Record in database: {:s}".format(str(res)))
+                        errorlog.write(str(be))
+                        continue
                 ## Then pull out the corresponding data
                 cursor.execute('''SELECT * FROM idx WHERE cik=?;''', (cik,))
                 recs = cursor.fetchall()
@@ -125,55 +137,51 @@ with sqlite3.connect('edgar_idx.db') as conn:
                     ## Two current quarters EPS as compared to the same quarters last year.
                     epsGrowth1 = canslim.getEpsGrowthQuarter(0, -4)
                     epsGrowth2 = canslim.getEpsGrowthQuarter(-1, -5)
-                    if not epsGrowth1 or not epsGrowth2:
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else:
+                    count = 0
+                    if epsGrowth1:
                         df.loc[symbolIdx, 'Eps_current_Q_per_same_Q_prior_year'] = epsGrowth1
+                        if epsGrowth1 > 0:
+                            count += 1
+                    if epsGrowth2:
                         df.loc[symbolIdx, 'Eps_previous_Q_per_same_Q_prior_year'] = epsGrowth2
+                        if epsGrowth2 > 0:
+                            count += 1
+                    if epsGrowth1 and epsGrowth2:
+                        if epsGrowth1 > epsGrowth2:
+                            count += 1
                     ## The number of years that the annual EPS increased over the last three years, and the annual growth.
                     growth1 = canslim.getEpsGrowthAnnual(0, -1)
                     growth2 = canslim.getEpsGrowthAnnual(-1, -2)
                     growth3 = canslim.getEpsGrowthAnnual(-2, -3)
-                    if not growth1 or not growth2 or not growth3:
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else:
-                        numYears = 0
+                    numYears = 0
+                    if growth1:
+                        df.loc[symbolIdx, 'Annual_eps_growth_Y0_Y1'] = growth1
                         if growth1 > 0.0:
                             numYears += 1
+                    if growth2:
+                        df.loc[symbolIdx, 'Annual_eps_growth_Y1_Y2'] = growth2
                         if growth2 > 0.0:
                             numYears += 1
+                    if growth3:
+                        df.loc[symbolIdx, 'Annual_eps_growth_Y2_Y3'] = growth3
                         if growth3 > 0.0:
                             numYears += 1
-                        df.loc[symbolIdx, 'Num_years_annual_eps_increasing_last_3_years'] = numYears
-                        df.loc[symbolIdx, 'Annual_eps_growth_Y0_Y1'] = growth1
-                        df.loc[symbolIdx, 'Annual_eps_growth_Y1_Y2'] = growth2
-                        df.loc[symbolIdx, 'Annual_eps_growth_Y2_Y3'] = growth3
-                        count = 0
-                        if epsGrowth1 > 0:
-                            count += 1
-                        if epsGrowth2 > 0:
-                            count += 1
-                        if epsGrowth1 > epsGrowth2:
-                            count += 1
+                    df.loc[symbolIdx, 'Num_years_annual_eps_increasing_last_3_years'] = numYears
+                    if (growth1) and (growth2) and (growth3):
                         if growth1 > growth2:
                             count += 1
                         if growth2 > growth3:
                             count += 1
                         count + numYears
-                        df.loc[symbolIdx, 'Excellency_of_eps_increase'] = count
+                    df.loc[symbolIdx, 'Excellency_of_eps_increase'] = count
                         
                     ## Calculate the acceleration of EPS growth for the last three quarters
                     epsAcc = canslim.getEpsGrowthAcceleration(3)
-                    if not epsAcc.all():
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else:
-                        df.loc[symbolIdx, 'Eps_growth_accel_last_3_Q'] = epsAcc[0]
+                    try:
+                        if epsAcc.all():
+                            df.loc[symbolIdx, 'Eps_growth_accel_last_3_Q'] = epsAcc[0]
+                    except:
+                        pass
                         
                     ## Check if there are two consecutive quarters with EPS deceleration
                     totalDecel = 0
@@ -195,57 +203,33 @@ with sqlite3.connect('edgar_idx.db') as conn:
                                     totalDecel = consecutiveDecel
                             else:
                                 consecutiveDecel = 0
-                    if err:
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else:
+                    if not err:
                         df.loc[symbolIdx, 'Num_Q_with_eps_growth_deceleration'] = totalDecel
                         
                     ## Calculate the ROE of the current quarter
                     roe = canslim.getRoeCurrent()
-                    if not roe:
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else:
+                    if roe:
                         df.loc[symbolIdx, 'Current_roe'] = roe
                         
                     ## Calculate the stability (goodness-of-fit) for the EPS growth over the last 16 quarters
                     stability = canslim.getStabilityOfEpsGrowth(16)
-                    if not stability:
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else:
+                    if stability:
                         df.loc[symbolIdx, 'Stability_of_eps_growth_last_16_Q'] = stability
                         
                     ## Calculate the EPS growth acceleration over the last 10 quarters
                     epsAcc2 = canslim.getEpsGrowthAcceleration(10)
-                    if not epsAcc2.all():
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else:
+                    if epsAcc2.all():
                         df.loc[symbolIdx, 'Eps_growth_accel_last_10_Q'] = epsAcc2[0]
                         
                     ## At this point, all contextIds needed for Sales should be set
                     ## Get Sales(current Q)/Sales(same Q prior year), as %
                     salesGrowth = canslim.getSalesGrowthQuarter(0, -4)
-                    if not salesGrowth:
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else:   
+                    if salesGrowth:
                         df.loc[symbolIdx, 'Sales_current_Q_per_prior_Q'] = salesGrowth
                         
                     ## Calculate the acceleration of Sales growth for the last three quarters
                     salesAcc = canslim.getSalesGrowthAcceleration(3)
-                    if not salesAcc.all():
-                        canslim.logErrors()
-                        del canslim
-                        continue
-                    else: 
+                    if salesAcc.all():
                         df.loc[symbolIdx, 'Sales_growth_accel_last_3_Q'] = salesAcc[0]
 
                     canslim.logErrors()
