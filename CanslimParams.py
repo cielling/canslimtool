@@ -360,7 +360,13 @@ class CanslimParams():
                     diff = int(qKey[:4]) - int(self.currentY[1:])
                     x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
-            p = polyfit(x, y, 2)
+            try:
+                p = polyfit(x, y, 2)
+            except BaseException as be:
+                self.errorLog.append("Unable to determine Stability of EPS Growth.")
+                self.errorLog.append("x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
+                self.errorLog.append(str(be))
+                return None
             yfit = polyval(p, x)
             sigma = (y - yfit) / y
             error = sigma * sigma
@@ -395,7 +401,13 @@ class CanslimParams():
                     diff = int(qKey[:4]) - int(self.currentY[1:])
                     x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
-            p = polyfit(x, y, 2)
+            try:
+                p = polyfit(x, y, 2)
+            except BaseException as be:
+                self.errorLog.append("Unable to determine EPS Growth Acceleration.")
+                self.errorLog.append("x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
+                self.errorLog.append(str(be))
+                return None
             return p
         return None
     
@@ -474,7 +486,13 @@ class CanslimParams():
                     diff = int(qKey[:4]) - int(self.currentY[1:])
                     x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
-            p = polyfit(x, y, 2)
+            try:
+                p = polyfit(x, y, 2)
+            except BaseException as be:
+                self.errorLog.append("Unable to determine Sales Growth Acceleration.")
+                self.errorLog.append("x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
+                self.errorLog.append(str(be))
+                return None
             return p
         return None
     
