@@ -330,5 +330,5 @@ class SecFiling(ABC):
         
         
     def printErrors(self):
-        print(", ".join(str(e) for e in self.errorLog))
+        return ", ".join(str(e) for e in self.errorLog)
             
