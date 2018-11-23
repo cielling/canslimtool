@@ -241,7 +241,7 @@ class SecFiling(ABC):
                                 current = tag
                                 prevDiff = diff
                         ## If a date range is given, make sure it's about a year long
-                        elif abs((tag_dates[1] - tag_dates[0]).days - duration) < eps:
+                        elif abs(abs(tag_dates[1] - tag_dates[0]).days - duration) < eps:
                             if contextRefLen < prevContextRefLen:
                                 prevContextRefLen = contextRefLen
                                 current = tag
@@ -281,6 +281,7 @@ class SecFiling(ABC):
         Useful for debugging purposes. 
         """
         return self.currentNI
+            
             
     def getStartEndDateForContext(self, contextRef):
         """Looks up the date for the given contextref/id.
