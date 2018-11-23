@@ -48,7 +48,7 @@ if canslim.loadData("TestData"):
     areEqual(expect, val)
     
     print("Getting EPS for Q-3:")
-    expect = 2.18
+    expect = 9.27-1.68-2.11-3.30
     val = canslim.getEpsQuarter(-3)
     print(val)
     areEqual(expect, val)
@@ -150,6 +150,8 @@ if canslim.loadData("TestData"):
     val = canslim.getRoeCurrent()
     print(val)
     areEqual(expect, val)
+    
+    print("\n".join(str(e) for e in canslim.errorLog))
     
 
     ## Test the auxiliary functions
