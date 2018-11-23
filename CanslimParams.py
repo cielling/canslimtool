@@ -40,61 +40,65 @@ class CanslimParams():
         self.all10KFilings = {}
         n10Qs = len(self.all10QsDf)
         n10Ks = len(self.all10KsDf)
+        if n10Qs == 0 and n10Ks == 0:
+            return False
         ## The following loops lend themselves to parallelizing, if that's possible
         ## Create a dict of all the 10Q-filings objects
         mostRecentDate = self.fiveYearsAgo
         for i in range(0, n10Qs):
-            if (self.all10QsDf.iloc[i].date > self.fiveYearsAgo):
-                filing = SecFiling10Q(self.ticker)
-                ## Download file if necessary, and generate the file name
-                fname = filing.download(self.all10QsDf.iloc[i].cik, \
-                                        self.all10QsDf.iloc[i].conm, \
-                                        self.all10QsDf.iloc[i].type, \
-                                        self.all10QsDf.iloc[i].date.strftime("%Y-%m-%f"), \
-                                        self.all10QsDf.iloc[i].path, \
-                                        downloadPath)
-                ## Load the file into the object instance
-                try:
-                    filing.load(fname)
-                except BaseException as be:
-                    self.errorLog.append("Unable to open filing {:s}.".format(fname))
-                    self.errorLog.append(be)
-                    return False
+            filing = SecFiling10Q(self.ticker)
+            ## Download file if necessary, and generate the file name
+            fname = filing.download(self.all10QsDf.iloc[i].cik, \
+                                    self.all10QsDf.iloc[i].conm, \
+                                    self.all10QsDf.iloc[i].type, \
+                                    self.all10QsDf.iloc[i].date.strftime("%Y-%m-%f"), \
+                                    self.all10QsDf.iloc[i].path, \
+                                    downloadPath)
+            ## Load the file into the object instance
+            try:
+                filing.load(fname)
+            except BaseException as be:
+                self.errorLog.append("Unable to open filing {:s}.".format(fname))
+                self.errorLog.append(be)
+                return False
+            reportDate = self.all10QsDf.iloc[i].date
+            if (reportDate > self.fiveYearsAgo):
                 ## Use the year+quarter (for filing date) information to create a key into the dict
-                quarterKey = "{:d}-Q{:d}".format(self.all10QsDf.iloc[i].date.year, int(self.all10QsDf.iloc[i].date.month / 3 + 1))
+                quarterKey = "{:d}-Q{:d}".format(reportDate.year, int(reportDate.month / 3 + 1))
                 ## TODO: verify that each filing was successfully loaded
                 self.all10QFilings[quarterKey] = filing
                 ## find the date of the most recent filing, to determine the "current quarter"
-                if self.all10QsDf.iloc[i].date > mostRecentDate:
-                    mostRecentDate = self.all10QsDf.iloc[i].date
+                if reportDate > mostRecentDate:
+                    mostRecentDate = reportDate
                     self.currentQ = quarterKey
                     
         # Create a dict of all the 10K-filing objects:
         mostRecentDate = self.fiveYearsAgo
         for i in range(0, n10Ks):
-            if (self.all10KsDf.iloc[i].date > self.fiveYearsAgo):
-                filing = SecFiling10K(self.ticker)
-                ## Download file if necessary, and generate the file name
-                fname = filing.download(self.all10KsDf.iloc[i].cik, \
-                                        self.all10KsDf.iloc[i].conm, \
-                                        self.all10KsDf.iloc[i].type, \
-                                        self.all10KsDf.iloc[i].date.strftime("%Y-%m-%f"), \
-                                        self.all10KsDf.iloc[i].path, \
-                                        downloadPath)
-                ## Load the file into the object instance
-                try:
-                    filing.load(fname)
-                except BaseException as be:
-                    self.errorLog.append("Unable to open filing {:s}.".format(fname))
-                    self.errorLog.append(be)
-                    return False
+            filing = SecFiling10K(self.ticker)
+            ## Download file if necessary, and generate the file name
+            fname = filing.download(self.all10KsDf.iloc[i].cik, \
+                                    self.all10KsDf.iloc[i].conm, \
+                                    self.all10KsDf.iloc[i].type, \
+                                    self.all10KsDf.iloc[i].date.strftime("%Y-%m-%f"), \
+                                    self.all10KsDf.iloc[i].path, \
+                                    downloadPath)
+            ## Load the file into the object instance
+            try:
+                filing.load(fname)
+            except BaseException as be:
+                self.errorLog.append("Unable to open filing {:s}.".format(fname))
+                self.errorLog.append(be)
+                return False
+            reportDate = self.all10KsDf.iloc[i].date
+            if (reportDate > self.fiveYearsAgo):
                 ## Use the year+quarter (for filing date) information to create a key into the dict
-                yearKey = "Y{:d}".format(self.all10KsDf.iloc[i].date.year)
+                yearKey = "Y{:d}".format(reportDate.year)
                 ## TODO: verify that each filing was successfully loaded
                 self.all10KFilings[yearKey] = filing
                 ## find the date of the most recent filing, to determine the "current year"
-                if self.all10KsDf.iloc[i].date > mostRecentDate:
-                    mostRecentDate = self.all10KsDf.iloc[i].date
+                if reportDate > mostRecentDate:
+                    mostRecentDate = reportDate
                     self.currentY = yearKey
         self.n10Ks = n10Ks
         self.n10Qs = n10Qs
@@ -107,7 +111,7 @@ class CanslimParams():
         The format of the quarter-key is 'Ynnnn-Qm' and is intended to be used to index into the all10QFilings-dict of 
         SecFiling10Q instances.
         """
-        if abs(q) > self.n10Qs:
+        if abs(q) > 20:
             return None
         if not self.quartersList:
             currentYear = int(self.currentQ.split("-Q")[0])
@@ -115,7 +119,7 @@ class CanslimParams():
             self.quartersList.append(self.currentQ)
             quarter = currentQuarter
             year = currentYear
-            for i in range(0, self.n10Qs):
+            for i in range(1, 20):
                 quarter = quarter - 1
                 if quarter < 1:
                     quarter = quarter + 4
@@ -130,11 +134,11 @@ class CanslimParams():
         The format of the year-key is 'Ynnnn' and is intended to be used to index into the all10KFilings-dict of 
         SecFiling10K instances.
         """
-        if abs(y) > self.n10Ks:
+        if abs(y) > 5:
             return None
         if not self.yearsList:
             currentYear = int(self.currentY[1:])
-            for i in range(0, self.n10Ks):
+            for i in range(0, 5):
                 year = currentYear - i
                 self.yearsList.append("Y{:d}".format(year))
         return self.yearsList[abs(y)]
@@ -155,7 +159,7 @@ class CanslimParams():
         -1 (minus one) is the previous quarter, etc. For readability, the minus sign is required. Only 
         integers between -15 and 0 are allowed.
         """
-        if quarter > -self.n10Qs:
+        if quarter > -16:
             qKey = self.__getQuarter(quarter)
             try:
                 eps = (self.all10QFilings)[qKey].getEps()
@@ -166,7 +170,7 @@ class CanslimParams():
                 ## So I have to calculate the values for that quarter from the 10-K and preceding 3 10-Q's.
                 ## If the missing Q is Q1, then the preceding 3 10's are from the prior year.
                 ## Make sure we have all the historical data we need:
-                if (quarter - 3) < -self.n10Qs:
+                if (quarter - 3) < -19:
                     return None
                 try:
                     year10KKey = "Y" + qKey[:4]
@@ -184,7 +188,6 @@ class CanslimParams():
                     last3QKey = self.__getQuarter(quarter - 3)
                     last3Eps = self.all10QFilings[last3QKey].getEps()
                     self.savedContextIds[last3QKey] = self.all10QFilings[last3QKey].getCurrentContextId()
-                    
                     eps = yearEps - last1Eps - last2Eps - last3Eps
                 except BaseException as be:
                     self.errorLog.append("Unable to infer EPS from the last few filings for quarter {:s}.".format(qKey))
@@ -201,11 +204,12 @@ class CanslimParams():
         -1 (minus one) is the previous year, etc. For readability, the minus sign is required. Only 
         integers between -3 and 0 are allowed.
         """
-        if year > -self.n10Ks:
+        if year > -5:
             yKey = self.__getYear(year)
-            eps = self.all10KFilings[yKey].getEps()
-            self.savedContextIds[yKey] = self.all10KFilings[yKey].getCurrentContextId()
-            return eps
+            if yKey in self.all10KFilings:
+                eps = self.all10KFilings[yKey].getEps()
+                self.savedContextIds[yKey] = self.all10KFilings[yKey].getCurrentContextId()
+                return eps
         return None
     
     
@@ -225,7 +229,7 @@ class CanslimParams():
         -1 (minus one) is the previous quarter, etc. For readability, the minus sign is required. Only 
         integers between -15 and 0 are allowed.
         """
-        if quarter > -self.n10Qs:
+        if quarter > -16:
             qKey = self.__getQuarter(quarter)
             contextIdKey = ""
             try:
@@ -269,9 +273,10 @@ class CanslimParams():
         -1 (minus one) is the previous year, etc. For readability, the minus sign is required. Only 
         integers between -3 and 0 are allowed.
         """
-        if year > -self.n10Ks:
+        if year > -5:
             yKey = self.__getYear(year)
-            return self.all10KFilings[yKey].getSales()
+            if yKey in self.all10KFilings:
+                return self.all10KFilings[yKey].getSales()
         return None
     
         
@@ -307,21 +312,29 @@ class CanslimParams():
         
     def getEpsGrowthRateQuarter(self, q1, q2):
         """Calculates the growth rate from q1 to q2 as the slope between two points."""
-        if q1 > -self.n10Qs and q2 > -self.n10Qs:
+        if q1 > -16 and q2 > -16:
             date1 = None
             try:
                 date1 = self.all10QFilings[self.__getQuarter(q1)].getReportDate()
             except:
                 ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
                 diff = int((self.__getQuarter(q1))[:4]) - int(self.currentY[1:])
-                date1 = self.all10KFilings[self.__getYear(diff)].getReportDate()
+                yKey1 = self.__getYear(diff)
+                if yKey1 in self.all10KFilings:
+                    date1 = self.all10KFilings[yKey1].getReportDate()
+                else:
+                    self.errorLog.append("Year not found in filings: {:s}.".format(yKey1))
             date2 = None
             try:
                 date2 = self.all10QFilings[self.__getQuarter(q2)].getReportDate()
             except:
                 ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
                 diff = int((self.__getQuarter(q2))[:4]) - int(self.currentY[1:])
-                date2 = self.all10KFilings[self.__getYear(diff)].getReportDate()
+                yKey2 = self.__getYear(diff)
+                if yKey2 in self.all10KFilings:
+                    date2 = self.all10KFilings[yKey2].getReportDate()
+                else:
+                    self.errorLog.append("Year not found in filings: {:s}.".format(yKey2))
             eps1 = self.getEpsQuarter(q1)
             eps2 = self.getEpsQuarter(q2)
             try:
@@ -340,7 +353,7 @@ class CanslimParams():
         The stability is calculated as the amount of deviation from the best-fit-line growth. 
         In other words, a line is fitted through the data, and the goodness-of-fit is determined.
         """
-        if numQuarters < self.n10Qs:
+        if numQuarters < 16:
             x = []
             y = []
             firstDate = None
@@ -352,13 +365,19 @@ class CanslimParams():
             ## create the arrays of EPS vs nDays (from most recent filing) values
             for i in range(0, -numQuarters, -1):
                 qKey = self.__getQuarter(i)
-                y.append(self.getEpsQuarter(i))
-                try:
-                    x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
-                except:
-                    ## Locate the 10-K submitted instead of the 10-Q
-                    diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
+                eps = self.getEpsQuarter(i)
+                if eps:
+                    y.append(eps)
+                    try:
+                        x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
+                    except:
+                        ## Locate the 10-K submitted instead of the 10-Q
+                        diff = int(qKey[:4]) - int(self.currentY[1:])
+                        yKey = self.__getYear(diff)
+                        if yKey in self.all10KFilings:
+                            x.append((self.all10KFilings[yKey].getReportDate() - firstDate).days)
+                        else:
+                            self.errorLog.append("Year not found: {:s}".format(yKey))
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             try:
                 p = polyfit(x, y, 2)
@@ -381,7 +400,7 @@ class CanslimParams():
         The acceleration is calculated as the second derivative of the data. numQuarters is required to 
         be between 2 and 15. At least three quarters are necessary to calculate acceleration.
         """
-        if numQuarters < self.n10Qs:
+        if numQuarters < 16:
             x = []
             y = []
             firstDate = None
@@ -393,13 +412,19 @@ class CanslimParams():
             ## create the arrays of EPS vs nDays (from most recent filing) values
             for i in range(0, -numQuarters, -1):
                 qKey = self.__getQuarter(i)
-                y.append(self.getEpsQuarter(i))
-                try:
-                    x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
-                except:
-                    ## Locate the 10-K submitted instead of the 10-Q
-                    diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
+                eps = self.getEpsQuarter(i)
+                if eps:
+                    y.append(eps)
+                    try:
+                        x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
+                    except:
+                        ## Locate the 10-K submitted instead of the 10-Q
+                        diff = int(qKey[:4]) - int(self.currentY[1:])
+                        yKey = self.__getYear(diff)
+                        if yKey in self.all10KFilings:
+                            x.append((self.all10KFilings[yKey].getReportDate() - firstDate).days)
+                        else:
+                            self.errorLog.append("Year not found: {:s}".format(yKey))
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             try:
                 p = polyfit(x, y, 2)
@@ -429,21 +454,29 @@ class CanslimParams():
      
     def getSalesGrowthRateQuarter(self, q1, q2):
         """Calculates the growth rate from q1 to q2 as the slope between two points."""
-        if q1 > -self.n10Qs and q2 > -self.n10Qs:
+        if q1 > -16 and q2 > -16:
             date1 = None
             try:
                 date1 = self.all10QFilings[self.__getQuarter(q1)].getReportDate()
             except:
                 ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
                 diff = int((self.__getQuarter(q1))[:4]) - int(self.currentY[1:])
-                date1 = self.all10KFilings[self.__getYear(diff)].getReportDate()
+                yKey1 = self.__getYear(diff)
+                if yKey1 in self.all10KFilings:
+                    date1 = self.all10KFilings[yKey1].getReportDate()
+                else:
+                    self.errorLog.append("Year not found in filings: {:s}.".format(yKey1))
             date2 = None
             try:
                 date2 = self.all10QFilings[self.__getQuarter(q2)].getReportDate()
             except:
                 ## If the 10-Q for the current quarter is missing, there should be a 10-K instead
                 diff = int((self.__getQuarter(q2))[:4]) - int(self.currentY[1:])
-                date2 = self.all10KFilings[self.__getYear(diff)].getReportDate()
+                yKey2 = self.__getYear(diff)
+                if yKey2 in self.all10KFilings:
+                    date2 = self.all10KFilings[yKey2].getReportDate()
+                else:
+                    self.errorLog.append("Year not found in filings: {:s}.".format(yKey2))
             sales1 = self.getSalesQuarter(q1)
             sales2 = self.getSalesQuarter(q2)
             try:
@@ -462,7 +495,7 @@ class CanslimParams():
         The acceleration is calculated as the second derivative of the data. numQuarters is required to 
         be between 2 and 15. At least three quarters are necessary to calculate acceleration.
         """
-        if numQuarters < self.n10Qs:
+        if numQuarters < 16:
             x = []
             y = []
             firstDate = None
@@ -475,16 +508,20 @@ class CanslimParams():
             for i in range(0, -numQuarters, -1):
                 qKey = self.__getQuarter(i)
                 sales = self.getSalesQuarter(i)
-                if not sales:
+                if sales:
+                    y.append(sales)
+                    try:
+                        x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
+                    except:
+                        ## Locate the 10-K submitted instead of the 10-Q
+                        diff = int(qKey[:4]) - int(self.currentY[1:])
+                        yKey = self.__getYear(diff)
+                        if yKey in self.all10KFilings:
+                            x.append((self.all10KFilings[yKey].getReportDate() - firstDate).days)
+                        else:
+                            self.errorLog.append("Year not found: {:s}".format(yKey))
+                else:
                     self.errorLog.append("Unable to get the sales data for this quarter: {:d}".format(i))
-                    return None
-                y.append(sales)
-                try:
-                    x.append((self.all10QFilings[qKey].getReportDate() - firstDate).days)
-                except:
-                    ## Locate the 10-K submitted instead of the 10-Q
-                    diff = int(qKey[:4]) - int(self.currentY[1:])
-                    x.append((self.all10KFilings[self.__getYear(diff)].getReportDate() - firstDate).days)
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             try:
                 p = polyfit(x, y, 2)
