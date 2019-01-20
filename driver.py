@@ -212,7 +212,7 @@ if "runonce" in argv:
     
 ## Tell the analysis to do a restart 
 doRestart = False
-if ("--r" in argv) or ("restart" in argv):
+if ("-r" in argv) or ("restart" in argv):
     doRestart = True    
 
 tStart = datetime.now()
@@ -229,7 +229,10 @@ print("Updating CIK-ticker lookup table.")
 screenerResultsFile = "screener_results.xls"
 df = pd.read_excel (screenerResultsFile, header = 0)
 screenerResultsFileAnalysed = "screener_results_analysis.xls"
-dfAnalysed = pd.DataFrame()
+if doRestart:
+    dfAnalyzed = pd.read_excel(screenerResultsFileAnalysed, header = 0)
+else:
+    dfAnalyzed = pd.DataFrame(columns = df.columns)
 ## Guarantee that the spreadsheet is sorted alphabetically by ticker symbol, and that the index
 ## is monotonically increasing.
 ## Note, the sort order seems to not be persistent, so abandon this idea.
@@ -237,18 +240,37 @@ dfAnalysed = pd.DataFrame()
 #df.reset_index(drop = True)
 print(df.size)
 
-logfile = open("analysislog.txt", "r+")
-analyzed = logfile.read().splitlines()
-logfile.close()
+if doRestart:
+    logfile = open("analyzed.txt", "r+")
+    analyzed = logfile.read().splitlines()
+    logfile.close()
+else:
+    analyzed = []
+
+count = 0
+
 for symbol in df.Symbol:
     ## Skip symbols I've already analyzed.
     if symbol in analyzed:
         print("Skipping {:s}".format(symbol))
         continue
-    dfAnalyzedTicker = analyzeTicker(df, doRestart=True)
-    dfAnalyzed.append(dfAnalyzedTicker)
+    analyzed.append(symbol)
+    dfAnalyzedTicker = analyzeTicker(df[df.Symbol == symbol], doRestart)
+    doRestart = True
+    print(dfAnalyzedTicker)
+    ## TODO: appending to dfAnalzed doesn't work (because it's initially empty?). Fix this.
+    dfAnalyzed = dfAnalyzed.append(dfAnalyzedTicker, ignore_index=True)
+    print(dfAnalyzed)
     dfAnalyzed.to_excel(screenerResultsFileAnalysed, index=None)
-    break
+    ###### REMOVE THIS IN PRODUCTION RUNS!!!!
+    count += 1
+    if count > 10:
+        break
+
+
+logfile = open("analyzed.txt", "w")
+logfile.write("\n".join(i for i in analyzed))
+logfile.close()
 
 tEnd = datetime.now()
 print("Runtime was {:d} sec.".format((tEnd - tStart).seconds))
