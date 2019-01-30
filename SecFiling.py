@@ -153,6 +153,13 @@ class SecFiling(ABC):
                 elif 'us-gaap:salesrevenuenet'.lower() == tag.name.strip():
                     if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
+                ## Some of AMG's statements use one of these two tags:
+                elif 'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax'.lower() == tag.name.strip():
+                    if (tag.attrs)['contextref'] == contextId:
+                        all_sales_tags.append(tag)
+                elif 'us-gaap:AssetManagementFees1'.lower() == tag.name.strip():
+                    if (tag.attrs)['contextref'] == contextId:
+                        all_sales_tags.append(tag)
         except BaseException as be:
             self.errorLog.append("Unable to find Sales data in filing.")
             self.errorLog.append(be)
