@@ -173,38 +173,9 @@ class SecFiling(ABC):
     def getRoe(self):
         """Retrieves the current Return on Equity from the filing."""
         ## First find the stockholders' equity
-        all_se_tags = []
+        currentSE = self.getStockholdersEquity()
         ## Then find the net income
-        all_ni_tags = []
-        self.currentSE = None
-        self.currentNI = None
-        try:
-            for tag in self.all_tags:
-                ## Check for all possible Stockholders' Equity- indicating tags
-                if 'us-gaap:StockholdersEquity'.lower() == tag.name.strip():
-                    all_se_tags.append(tag)
-                elif 'us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest'.lower() \
-                        == tag.name.strip():
-                    all_se_tags.append(tag)
-                ## Check for all possible Net Income- indicating tags
-                if 'us-gaap:NetIncomeLoss'.lower() == tag.name.strip():
-                    all_ni_tags.append(tag)
-                elif 'us-gaap:NetIncomeLossAvailableToCommonStockholdersBasic'.lower() == tag.name.strip():
-                    all_ni_tags.append(tag)
-                elif 'us-gaap:ProfitLoss'.lower() == tag.name.strip():
-                    all_ni_tags.append(tag)
-            if not all_se_tags:
-                self.errorLog.append("Stockholders' equity information not found.")
-            if not all_ni_tags:
-                self.errorLog.append("Net income information not found.")
-            self.currentSE = self.getCurrentValue(all_se_tags)
-            self.currentNI = self.getCurrentValue(all_ni_tags)
-        except:
-            if not self.currentSE:
-                self.errorLog.append("Unable to find Stockholders' Equity in filing.")
-            if not self.currentNI:
-                self.errorLog.append("Unable to find Net Income in filing.")
-            return None
+        currentNI = self.getNetIncome()
         ## Return on equity = net income / stockholders' equity
         self.currentRoe = 0.0
         if self.currentSE and self.currentNI and self.currentSE > 0.0:
@@ -277,7 +248,24 @@ class SecFiling(ABC):
         
         This attribute is populated by getRoe(). It is 'None' until that function is called. 
         Useful for debugging purposes. 
-        """
+        """## First find the stockholders' equity
+        all_se_tags = []
+        self.currentSE = None
+        try:
+            for tag in self.all_tags:
+                ## Check for all possible Stockholders' Equity- indicating tags
+                if 'us-gaap:StockholdersEquity'.lower() == tag.name.strip():
+                    all_se_tags.append(tag)
+                elif 'us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest'.lower() \
+                        == tag.name.strip():
+                    all_se_tags.append(tag)
+            if not all_se_tags:
+                self.errorLog.append("Stockholders' equity information not found.")
+            self.currentSE = self.getCurrentValue(all_se_tags)
+        except:
+            if not self.currentSE:
+                self.errorLog.append("Unable to find Stockholders' Equity in filing.")
+            return None
         return self.currentSE
     
     
@@ -287,6 +275,25 @@ class SecFiling(ABC):
         This attribute is populated by getRoe(). It is 'None' until that function is called. 
         Useful for debugging purposes. 
         """
+        ## Then find the net income
+        all_ni_tags = []
+        self.currentNI = None
+        try:
+            for tag in self.all_tags:
+                ## Check for all possible Net Income- indicating tags
+                if 'us-gaap:NetIncomeLoss'.lower() == tag.name.strip():
+                    all_ni_tags.append(tag)
+                elif 'us-gaap:NetIncomeLossAvailableToCommonStockholdersBasic'.lower() == tag.name.strip():
+                    all_ni_tags.append(tag)
+                elif 'us-gaap:ProfitLoss'.lower() == tag.name.strip():
+                    all_ni_tags.append(tag)
+            if not all_ni_tags:
+                self.errorLog.append("Net income information not found.")
+            self.currentNI = self.getCurrentValue(all_ni_tags)
+        except:
+            if not self.currentNI:
+                self.errorLog.append("Unable to find Net Income in filing.")
+            return None
         return self.currentNI
             
             
