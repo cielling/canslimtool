@@ -82,7 +82,17 @@ def get_cik_ticker_lookup_db ():
                        )
         counter += 1
     ## Note that the CSV file does not include all tickers. Append these manually, and/or find a better way to handle this.
-    records.append("1577552", "BABA", "Alibaba Group Holding Ltd")
+    records.append(("1577552", "BABA", "Alibaba Group Holding Ltd"))
+    "0001024148", "BASFY", "BASF AKTIENGESELLSCHAFT"
+    "0001161125","BCH", "Bank of Chile"
+    "0001329099", "BIDU", "Baidu, Inc. "
+    "0001013488", "BJRI", "BJs RESTAURANTS INC"
+    "0001001290", "BAP", "CREDICORP LTD"
+    "0000937966", "ASML", "ASML HOLDING NV"
+    "0001527636", "ATHM", "Autohome Inc."
+    "0000050104", "ANDV", "ANDEAVOR"
+    "0001596532", "ANET", "Arista Networks, Inc."
+    "0001521332", "APTV", "Aptiv PLC"
     
     #print (records)
     #insert data into the table
