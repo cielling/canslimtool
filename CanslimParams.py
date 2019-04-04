@@ -64,7 +64,7 @@ class CanslimParams():
             reportDate = self.all10QsDf.iloc[i].date
             if (reportDate > self.fiveYearsAgo):
                 ## Use the year+quarter (for filing date) information to create a key into the dict
-                quarterKey = "{:d}-Q{:d}".format(reportDate.year, int(reportDate.month / 3 + 1))
+                quarterKey = "{:d}-Q{:d}".format(reportDate.year, int((reportDate.month - 1) / 3 + 1))
                 ## TODO: verify that each filing was successfully loaded
                 self.all10QFilings[quarterKey] = filing
                 ## find the date of the most recent filing, to determine the "current quarter"
