@@ -54,8 +54,12 @@ class SecFiling(ABC):
                 os.makedirs(saveDir)
             with open("logfile.txt", "a+") as logfile:
                 with open(self.fname, 'wb') as f:
-                    f.write(requests.get('%s' % url).content)
-                    logfile.write('{:s} - downloaded and saved as {:s}\n'.format(url, self.fname))
+                    try:
+                        f.write(requests.get('%s' % url).content)
+                        logfile.write('{:s} - downloaded and saved as {:s}\n'.format(url, self.fname))
+                    except BaseException as be:
+                        print("Unable to download from url: {:s}".format(url))
+                        print(str(be))
         return (self.fname)
     
     
@@ -91,6 +95,14 @@ class SecFiling(ABC):
                 ## Don't 'break', to give the first if statement priority.
                 elif description.startswith("EX-101.INS".lower()):
                     self.xbrlInstance = tag
+                ## In the case of inline XBRL tags, there is no Instance document, but the SEC extracts one.
+                ## Try and find that instead, by finding an XML-tag within a description tag of "IDEA: XBRL DOCUMENT".
+                elif (description.startswith("idea: xbrl document")):
+                    self.errorLog.append("Trying to fall back on extracted instance document.")
+                    xml_tags = tag.find("xml")
+                    #self.errorLog.append(xml_tags)
+                    if xml_tags:
+                        self.xbrlInstance = tag
         except:
             self.errorLog.append("Unable to find document-tags in file.")
             return False
