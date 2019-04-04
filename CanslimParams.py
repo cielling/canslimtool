@@ -102,6 +102,10 @@ class CanslimParams():
                     self.currentY = yearKey
         self.n10Ks = n10Ks
         self.n10Qs = n10Qs
+        self.errorLog.append("Loaded {:d} 10Q's and {:d} 10K's.".format(n10Qs, n10Ks))
+        self.errorLog.append(", ".join(k for k in self.all10QFilings))
+        self.errorLog.append(", ".join(k for k in self.all10KFilings))
+        self.errorLog.append("Current year = {:s}, current quarter = {:s}.".format(self.currentY, self.currentQ))
         return True
     
                 
