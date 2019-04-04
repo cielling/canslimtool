@@ -206,14 +206,17 @@ def analyzeTicker(df, doRestart, procNum = 0):
                     
                     
 ## TODO: (some) foreign companies submit a 20-F instead of a 10-K
-runOnce = False
-if "runonce" in argv:
-    runOnce = True
     
 ## Tell the analysis to do a restart 
 doRestart = False
 if ("-r" in argv) or ("restart" in argv):
-    doRestart = True    
+    doRestart = True
+    
+doTicker = False
+if ("--ticker" in argv):
+    doTicker = True    
+    processTicker = (argv[argv.index("--ticker") + 1]).upper()
+    print(processTicker)
 
 tStart = datetime.now()
 
@@ -254,16 +257,19 @@ for symbol in df.Symbol:
     if symbol in analyzed:
         print("Skipping {:s}".format(symbol))
         continue
-    analyzed.append(symbol)
-    dfAnalyzedTicker = analyzeTicker(df[df.Symbol == symbol], doRestart)
-    doRestart = True
-    print(dfAnalyzedTicker)
-    ## TODO: appending to dfAnalzed doesn't work (because it's initially empty?). Fix this.
-    dfAnalyzed = dfAnalyzed.append(dfAnalyzedTicker, ignore_index=True)
-    print(dfAnalyzed)
-    dfAnalyzed.to_excel(screenerResultsFileAnalysed, index=None)
-    ###### REMOVE THIS IN PRODUCTION RUNS!!!!
-    count += 1
+    if not doTicker or symbol == processTicker:
+        analyzed.append(symbol)
+        dfAnalyzedTicker = analyzeTicker(df[df.Symbol == symbol], doRestart)
+        doRestart = True
+        print(dfAnalyzedTicker)
+        ## TODO: appending to dfAnalzed doesn't work (because it's initially empty?). Fix this.
+        dfAnalyzed = dfAnalyzed.append(dfAnalyzedTicker, ignore_index=True)
+        print(dfAnalyzed)
+        dfAnalyzed.to_excel(screenerResultsFileAnalysed, index=None)
+        ###### REMOVE THIS IN PRODUCTION RUNS!!!!
+        count += 1
+        if doTicker:
+            count += 10
     if count > 10:
         break
 
