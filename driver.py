@@ -41,7 +41,7 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 dfOut['Annual_eps_growth_Y0_Y1'] = -99.99
                 dfOut['Annual_eps_growth_Y1_Y2'] = -99.99
                 dfOut['Annual_eps_growth_Y2_Y3'] = -99.99
-                dfOut['Excellency_of_eps_increase'] = -99.99
+                dfOut['Excellence_of_eps_increase'] = -99.99
                 dfOut['Eps_growth_accel_last_3_Q'] = -99.99
                 dfOut['Num_Q_with_eps_growth_deceleration'] = -99.99
                 dfOut['Current_roe'] = -99.99
@@ -92,7 +92,7 @@ def analyzeTicker(df, doRestart, procNum = 0):
                     ## Do the Canslim analysis. Remember to calculate the EPS(q) before calculating the 
                     ## Sales(q) until the contextId-issue is fixed.
                     
-                    ## For the excellency of the EPS growth, determine the following two factors:
+                    ## For the excellence of the EPS growth, determine the following two factors:
                     ## Two current quarters EPS as compared to the same quarters last year.
                     epsGrowth1 = canslim.getEpsGrowthQuarter(0, -4)
                     epsGrowth2 = canslim.getEpsGrowthQuarter(-1, -5)
@@ -132,7 +132,7 @@ def analyzeTicker(df, doRestart, procNum = 0):
                         if growth2 > growth3:
                             count += 1
                         count + numYears
-                    dfOut.loc[symbolIdx, 'Excellency_of_eps_increase'] = count
+                    dfOut.loc[symbolIdx, 'Excellence_of_eps_increase'] = count
                         
                     ## Calculate the acceleration of EPS growth for the last three quarters
                     epsAcc = canslim.getEpsGrowthAcceleration(3)
@@ -299,7 +299,7 @@ print("Runtime was {:d} sec.".format((tEnd - tStart).seconds))
                     # df['Annual_eps_growth_Y0_Y1'] = -99.99
                     # df['Annual_eps_growth_Y1_Y2'] = -99.99
                     # df['Annual_eps_growth_Y2_Y3'] = -99.99
-                    # df['Excellency_of_eps_increase'] = -99.99
+                    # df['Excellence_of_eps_increase'] = -99.99
                     # df['Eps_growth_accel_last_3_Q'] = -99.99
                     # df['Num_Q_with_eps_growth_deceleration'] = -99.99
                     # df['Current_roe'] = -99.99
