@@ -263,7 +263,7 @@ for symbol in df.Symbol:
         doRestart = True
         print(dfAnalyzedTicker)
         ## TODO: appending to dfAnalzed doesn't work (because it's initially empty?). Fix this.
-        dfAnalyzed = dfAnalyzed.append(dfAnalyzedTicker, ignore_index=True)
+        dfAnalyzed = pd.concat([dfAnalyzedTicker, dfAnalyzed])
         print(dfAnalyzed)
         dfAnalyzed.to_excel(screenerResultsFileAnalysed, index=None)
         ###### REMOVE THIS IN PRODUCTION RUNS!!!!
