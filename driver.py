@@ -209,8 +209,9 @@ def analyzeTicker(df, doRestart, procNum = 0):
     
 ## Tell the analysis to do a restart 
 doRestart = False
-if ("-r" in argv) or ("restart" in argv):
+if ("-r" in argv) or ("restart" in argv) or ("--restart" in argv):
     doRestart = True
+    print("Restarting previous run.")
     
 doTicker = False
 if ("--ticker" in argv):
@@ -257,7 +258,7 @@ for symbol in df.Symbol:
     if symbol in analyzed:
         print("Skipping {:s}".format(symbol))
         continue
-    if not doTicker or symbol == processTicker:
+    elif not doTicker or symbol == processTicker:
         analyzed.append(symbol)
         dfAnalyzedTicker = analyzeTicker(df[df.Symbol == symbol], doRestart)
         doRestart = True
