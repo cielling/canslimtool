@@ -539,7 +539,8 @@ class CanslimParams():
     
     
     def logErrors(self):
-        with open("{:s}_log.txt".format(self.ticker), "w+") as f:
+        from os.path import join
+        with open(join("Logs", "{:s}_log.txt".format(self.ticker)), "w+") as f:
             for item in self.errorLog:
                 f.write("{:s}\n".format(str(item)))
             for item in self.all10QFilings:
