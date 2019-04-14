@@ -87,10 +87,12 @@ class SecFiling(ABC):
         doc_tag = soup.find_all("document")
         try:
             for tag in doc_tag:
-                description = tag.find("description").get_text().lower()
-                if (description.startswith("xbrl instance document")):
-                    self.xbrlInstance = tag
-                    break
+                desc_tag = tag.find("description")
+                if desc_tag:
+                    description = desc_tag.get_text().lower()
+                    if (description.startswith("xbrl instance document")):
+                        self.xbrlInstance = tag
+                        break
 
             ## Try again, in case the first attempt didn't find an XBRL Document
             if not self.xbrlInstance:
