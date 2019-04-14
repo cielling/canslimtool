@@ -271,8 +271,8 @@ for symbol in df.Symbol:
         ###### REMOVE THIS IN PRODUCTION RUNS!!!!
         count += 1
         if doTicker:
-            count += 10
-    if count > 10:
+            count += 100
+    if count > 100:
         break
 
 
