@@ -91,24 +91,38 @@ class SecFiling(ABC):
                 if (description.startswith("xbrl instance document")):
                     self.xbrlInstance = tag
                     break
-                ## Sometimes the description seems to be (mis-)named by the default instance document file named.
-                ## Don't 'break', to give the first if statement priority.
-                elif description.startswith("EX-101.INS".lower()):
-                    self.xbrlInstance = tag
-                ## In the case of inline XBRL tags, there is no Instance document, but the SEC extracts one.
-                ## Try and find that instead, by finding an XML-tag within a description tag of "IDEA: XBRL DOCUMENT".
-                elif (description.startswith("idea: xbrl document")):
-                    self.errorLog.append("Trying to fall back on extracted instance document.")
-                    xml_tags = tag.find("xml")
-                    #self.errorLog.append(xml_tags)
-                    if xml_tags:
-                        self.xbrlInstance = tag
+
+            ## Try again, in case the first attempt didn't find an XBRL Document
+            if not self.xbrlInstance:
+                for tag in doc_tag:        
+                    ## Sometimes the description seems to be (mis-)named by the default instance document file named.
+                    ## Don't 'break', to give the first if statement priority.
+                    if description.startswith("EX-101.INS".lower()):
+                        ## Avoid overwriting a previously found xbrl instance
+                        if not self.xbrlInstance:
+                            self.xbrlInstance = tag
+                            break
+                    
+            ## Try yet again, in case the second attempt didn't find an XBRL Document either
+            if not self.xbrlInstance:    
+                for tag in doc_tag:
+                    ## In the case of inline XBRL tags, there is no Instance document, but the SEC extracts one.
+                    ## Try and find that instead, by finding an XML-tag within a description tag of "IDEA: XBRL DOCUMENT".
+                    if (description.startswith("idea: xbrl document")):
+                        self.errorLog.append("Trying to fall back on extracted instance document.\n")
+                        ## I think I just want the first occurrence of this. It seems that that is the XBRL Doc.
+                        if not self.xbrlInstance:
+                            xml_tags = tag.find("xml")
+                            #self.errorLog.append(xml_tags)
+                            if xml_tags:
+                                self.xbrlInstance = tag
+                                break
         except:
             self.errorLog.append("Unable to find document-tags in file.")
             return False
         
         if not self.xbrlInstance:
-            self.errorLog.append("ERROR: unable to find Instance document for {:s}".format(self.fname))
+            self.errorLog.append("ERROR: unable to find Instance document for {:s}.\n".format(self.fname))
             return False
         
         ## 'findAll('us-gaap:earningspersharebasic')' doesn't seem to work... so find them manually
@@ -133,7 +147,7 @@ class SecFiling(ABC):
                     all_eps_tags.append(tag)
             self.currentEps = self.getCurrentValue(all_eps_tags)
         except:
-            self.errorLog.append("Unable to find the EPS information in the filing.")
+            self.errorLog.append("Unable to find the EPS information in the filing.\n")
             return None
         return self.currentEps
             
@@ -146,7 +160,7 @@ class SecFiling(ABC):
         figure out the currentContextRef by itself."""
         if not contextId:
             if not self.currentContextId:
-                self.errorLog.append("ERROR! current contextId is not set!")
+                self.errorLog.append("ERROR! current contextId is not set!\n")
                 return -99.0
             else:
                 contextId = self.currentContextId
