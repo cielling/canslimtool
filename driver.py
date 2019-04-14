@@ -22,7 +22,7 @@ def analyzeTicker(df, doRestart, procNum = 0):
     ## Load the database of index file names to generate url
     with sqlite3.connect('edgar_idx.db') as conn:
         cursor = conn.cursor()
-        with open("analysislog"+str(procNum)+".txt", mode) as logfile:
+        with open("analysislog"+str(procNum)+".txt", "w+") as logfile:
             with open("analysiserrors"+str(procNum)+".txt", mode) as errorlog:
                 ## Keep a log of all the files that were processed. 
                 ## Do the Canslim analysis for each ticker in that file
@@ -33,7 +33,8 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 symbolIdx = 0
                 symbol = df.Symbol.iloc[symbolIdx]
                 print("Processing {:s}\n".format(symbol))
-                logfile.write("Processing {:s}\n".format(symbol))                    
+                logfile.write("Processing {:s}\n".format(symbol))   
+                errorlog.write("Processing {:s}\n".format(symbol))                    
                 # ## Add/reset the columns we're going to fill out:
                 dfOut['Eps_current_Q_per_same_Q_prior_year'] = -99.99
                 dfOut['Eps_previous_Q_per_same_Q_prior_year'] = -99.99
@@ -57,13 +58,13 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 if not res:
                     record = lookup_cik_ticker(symbol)
                     if not record:
-                        print("Unsuccessful.")
+                        errorlog.write("Unsuccessful.")
                         return dfOut
                     #insert data into the table
                     #cursor.execute ('INSERT INTO cik_ticker_name VALUES (?, ?, ?)', record)
                     #conn.commit ()
                     cik = record[0]
-                    print(cik)
+                    errorlog.write(cik)
                 else:
                     try: 
                         cik = res[0][0]
