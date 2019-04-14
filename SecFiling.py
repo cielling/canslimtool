@@ -58,8 +58,8 @@ class SecFiling(ABC):
                         f.write(requests.get('%s' % url).content)
                         logfile.write('{:s} - downloaded and saved as {:s}\n'.format(url, self.fname))
                     except BaseException as be:
-                        print("Unable to download from url: {:s}".format(url))
-                        print(str(be))
+                        self.errorLog.append("Unable to download from url: {:s}".format(url))
+                        self.errorLog.append(str(be))
         return (self.fname)
     
     
@@ -78,7 +78,7 @@ class SecFiling(ABC):
                     self.reportDate = datetime.strptime((l.split(":")[1]).strip(), "%Y%m%d")
                 if 'standard industrial classification' in l.lower():
                     self.stdIndustrialClass = l.split(":")[1].strip()
-            print("Report date: {:s}, industrial class: {:s}". format(str(self.reportDate), self.stdIndustrialClass))
+            self.errorLog.append("Report date: {:s}, industrial class: {:s}". format(str(self.reportDate), self.stdIndustrialClass))
         except:
             self.errorLog.append("Unable to find SEC-header in file.")
             return False
