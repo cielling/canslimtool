@@ -188,6 +188,10 @@ class SecFiling(ABC):
                 elif 'us-gaap:AssetManagementFees1'.lower() == tag.name.strip():
                     if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
+                ## The 10-Q of CRVL for 2018-Q1 (filing date 2017/12/31) uses this tag:
+                elif 'us-gaap:SalesRevenueServicesNet'.lower() == tag.name.strip():
+                    if (tag.attrs)['contextref'] == contextId:
+                        all_sales_tags.append(tag)
         except BaseException as be:
             self.errorLog.append("Unable to find Sales data in filing.")
             self.errorLog.append(be)
