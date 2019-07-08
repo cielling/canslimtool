@@ -217,13 +217,118 @@ class CanslimParams():
         return None
     
     
+    def getNetIncomeQuarter(self, quarter):
+        """Return the Net Income for the specified quarter.
+        
+        The quarter is specified as an integer counting backwards, e.g. 0 (zero) is the current quarter,
+        -1 (minus one) is the previous quarter, etc. For readability, the minus sign is required. Only 
+        integers between -15 and 0 are allowed.
+        """
+    
+        if quarter > -16:
+            qKey = self.__getQuarter(quarter)
+            try:
+                NI = (self.all10QFilings)[qKey].getNetIncome()
+            except KeyError:
+                ## Some/most/all? companies submit the 10-K *instead* of the 10-Q for that quarter.
+                ## So I have to calculate the values for that quarter from the 10-K and preceding 3 10-Q's.
+                ## If the missing Q is Q1, then the preceding 3 10's are from the prior year.
+                ## Make sure we have all the historical data we need:
+                if (quarter - 3) < -19:
+                    return None
+                try:
+                    year10KKey = "Y" + qKey[:4]
+                    yearNI = self.all10KFilings[year10KKey].getNetIncome()
+                    
+                    last1QKey = self.__getQuarter(quarter - 1)
+                    last1NI = self.all10QFilings[last1QKey].getNetIncome()
+                    
+                    last2QKey = self.__getQuarter(quarter - 2)
+                    last2NI = self.all10QFilings[last2QKey].getNetIncome()
+                    
+                    last3QKey = self.__getQuarter(quarter - 3)
+                    last3NI = self.all10QFilings[last3QKey].getNetIncome()
+                    NI = yearNI - last1NI - last2NI - last3NI
+                except BaseException as be:
+                    self.errorLog.append("Unable to infer Net Income from the last few filings for quarter {:s}.".format(qKey))
+                    self.errorLog.append(be)
+                    return None
+            return NI
+        return None
+        
+    
+    def getStockholdersEquityQuarter(self, quarter):
+        """Return the Net Income for the specified quarter.
+        
+        The quarter is specified as an integer counting backwards, e.g. 0 (zero) is the current quarter,
+        -1 (minus one) is the previous quarter, etc. For readability, the minus sign is required. Only 
+        integers between -15 and 0 are allowed.
+        """
+    
+        if quarter > -16:
+            qKey = self.__getQuarter(quarter)
+            try:
+                SE = (self.all10QFilings)[qKey].getStockholdersEquity()
+            except KeyError:
+                ## Some/most/all? companies submit the 10-K *instead* of the 10-Q for that quarter.
+                ## So I have to calculate the values for that quarter from the 10-K and preceding 3 10-Q's.
+                ## If the missing Q is Q1, then the preceding 3 10's are from the prior year.
+                ## Make sure we have all the historical data we need:
+                if (quarter - 3) < -19:
+                    return None
+                try:
+                    year10KKey = "Y" + qKey[:4]
+                    yearSE = self.all10KFilings[year10KKey].getStockholdersEquity()
+                    
+                    last1QKey = self.__getQuarter(quarter - 1)
+                    last1SE = self.all10QFilings[last1QKey].getStockholdersEquity()
+                    
+                    last2QKey = self.__getQuarter(quarter - 2)
+                    last2SE = self.all10QFilings[last2QKey].getStockholdersEquity()
+                    
+                    last3QKey = self.__getQuarter(quarter - 3)
+                    last3SE = self.all10QFilings[last3QKey].getStockholdersEquity()
+                    SE = yearSE - last1SE - last2SE - last3SE
+                except BaseException as be:
+                    self.errorLog.append("Unable to infer Net Income from the last few filings for quarter {:s}.".format(qKey))
+                    self.errorLog.append(be)
+                    return None
+            return SE
+        return None
+        
+        
     def getRoeCurrent(self):
-        """Returns the Return on Equity over the last four quarters."""
+        """Returns the Return on Equity over the last four quarters (TTM).
+        
+        ROE is calculated as:
+        
+            (change in Net Income) / (change in Stockholders' Equity).
+        """
         roe = 0.0
-        #for i in range(0, -4, -1):
-        #    roe += self.all10QFilings[self.__getQuarter(i)].getRoe()
-        roe = self.all10QFilings[self.currentQ].getRoe()
-        return roe
+        # Calculate the change in Net Income and Stockholders' Equity over the last twelve months,
+        # and find the ratio.
+        roe = 0.0
+        niDiff = 0.0
+        ni1 = self.getNetIncomeQuarter(0)
+        ni2 = self.getNetIncomeQuarter(-4)
+        if ni1 and ni2:
+            niDiff = ni1 - ni2
+        else:
+            print("Unable to retrieve Net Income for quarter 0 or -4 or both.")
+        seDiff = 0.0
+        se1 = self.getStockholdersEquityQuarter(0)
+        se2 = self.getStockholdersEquityQuarter(-4)
+        if se1 and se2:
+            seDiff = se1 - se2
+        else:
+            print("Unable to retrieve Stockholders' Equity for quarter 0 or -4 or both.")
+        if (seDiff != 0.0):
+            roe = niDiff / seDiff
+        # Make roe negative if both S.E. and N.I. have decreased over the last year.
+        if seDiff < 0.0 and niDiff < 0.0:
+            roe *= -1.0
+        # Multiply by 100 to make a percentage.
+        return roe * 100.0
     
     
     def getSalesQuarter(self, quarter):
