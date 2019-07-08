@@ -58,7 +58,7 @@ class SecFiling(ABC):
                         f.write(requests.get('%s' % url).content)
                         logfile.write('{:s} - downloaded and saved as {:s}\n'.format(url, self.fname))
                     except BaseException as be:
-                        self.errorLog.append("Unable to download from url: {:s}".format(url))
+                        self.errorLog.append("SecFiling: Unable to download from url: {:s}".format(url))
                         self.errorLog.append(str(be))
         return (self.fname)
     
@@ -78,9 +78,9 @@ class SecFiling(ABC):
                     self.reportDate = datetime.strptime((l.split(":")[1]).strip(), "%Y%m%d")
                 if 'standard industrial classification' in l.lower():
                     self.stdIndustrialClass = l.split(":")[1].strip()
-            self.errorLog.append("Report date: {:s}, industrial class: {:s}". format(str(self.reportDate), self.stdIndustrialClass))
+            self.errorLog.append("SecFiling: Report date: {:s}, industrial class: {:s}". format(str(self.reportDate), self.stdIndustrialClass))
         except:
-            self.errorLog.append("Unable to find SEC-header in file.")
+            self.errorLog.append("SecFiling: Unable to find SEC-header in file.")
             return False
         
         ## Find the XBRL Instance document. It has the description-tag "XBRL INSTANCE DOCUMENT" within its document-tag.
@@ -111,7 +111,7 @@ class SecFiling(ABC):
                     ## In the case of inline XBRL tags, there is no Instance document, but the SEC extracts one.
                     ## Try and find that instead, by finding an XML-tag within a description tag of "IDEA: XBRL DOCUMENT".
                     if (description.startswith("idea: xbrl document")):
-                        self.errorLog.append("Trying to fall back on extracted instance document.\n")
+                        self.errorLog.append("SecFiling: Trying to fall back on extracted instance document.\n")
                         ## I think I just want the first occurrence of this. It seems that that is the XBRL Doc.
                         if not self.xbrlInstance:
                             xml_tags = tag.find("xml")
@@ -120,17 +120,17 @@ class SecFiling(ABC):
                                 self.xbrlInstance = tag
                                 break
         except:
-            self.errorLog.append("Unable to find document-tags in file.")
+            self.errorLog.append("SecFiling: Unable to find document-tags in file.")
             return False
         
         if not self.xbrlInstance:
-            self.errorLog.append("ERROR: unable to find Instance document for {:s}.\n".format(self.fname))
+            self.errorLog.append("SecFiling: ERROR: unable to find Instance document for {:s}.\n".format(self.fname))
             return False
         
         ## 'findAll('us-gaap:earningspersharebasic')' doesn't seem to work... so find them manually
         self.all_tags = self.xbrlInstance.findAll()
         if not self.all_tags:
-            self.errorLog.append("No tags found!")
+            self.errorLog.append("SecFiling: No tags found!")
             return False
         return True
     
@@ -149,7 +149,7 @@ class SecFiling(ABC):
                     all_eps_tags.append(tag)
             self.currentEps = self.getCurrentValue(all_eps_tags)
         except:
-            self.errorLog.append("Unable to find the EPS information in the filing.\n")
+            self.errorLog.append("SecFiling: Unable to find the EPS information in the filing.\n")
             return None
         return self.currentEps
             
@@ -162,7 +162,7 @@ class SecFiling(ABC):
         figure out the currentContextRef by itself."""
         if not contextId:
             if not self.currentContextId:
-                self.errorLog.append("ERROR! current contextId is not set!\n")
+                self.errorLog.append("SecFiling: ERROR! current contextId is not set!\n")
                 return -99.0
             else:
                 contextId = self.currentContextId
@@ -193,11 +193,11 @@ class SecFiling(ABC):
                     if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
         except BaseException as be:
-            self.errorLog.append("Unable to find Sales data in filing.")
+            self.errorLog.append("SecFiling: Unable to find Sales data in filing.")
             self.errorLog.append(be)
             return None
         if not all_sales_tags:
-            self.errorLog.append("Sales/Revenue information not found.")
+            self.errorLog.append("SecFiling: Sales/Revenue information not found.")
         self.currentSales = self.getCurrentValue(all_sales_tags) 
         return self.currentSales
         
@@ -263,12 +263,12 @@ class SecFiling(ABC):
             if current:
                 self.currentContextId = (current.attrs)['contextref']
             else:
-                self.errorLog.append("Failed to determine the value for current contextId")
-                self.errorLog.append("Received tagList: \n" + str(tagList))
-                self.errorLog.append("Stored contextIds: \n" + str(self.contextIds))
+                self.errorLog.append("SecFiling: Failed to determine the value for current contextId")
+                self.errorLog.append("SecFiling: Received tagList: \n" + str(tagList))
+                self.errorLog.append("SecFiling: Stored contextIds: \n" + str(self.contextIds))
                 return None
         except Exception as ex:
-            self.errorLog.append("Unable to determine the current value:")
+            self.errorLog.append("SecFiling: Unable to determine the current value:")
             self.errorLog.append(type(ex).__name__)
             self.errorLog.append(ex)
             self.errorLog.append(traceback.print_exc())
@@ -293,11 +293,11 @@ class SecFiling(ABC):
                         == tag.name.strip():
                     all_se_tags.append(tag)
             if not all_se_tags:
-                self.errorLog.append("Stockholders' equity information not found.")
+                self.errorLog.append("SecFiling: Stockholders' equity information not found.")
             self.currentSE = self.getCurrentValue(all_se_tags)
         except:
             if not self.currentSE:
-                self.errorLog.append("Unable to find Stockholders' Equity in filing.")
+                self.errorLog.append("SecFiling: Unable to find Stockholders' Equity in filing.")
             return None
         return self.currentSE
     
@@ -321,11 +321,11 @@ class SecFiling(ABC):
                 elif 'us-gaap:ProfitLoss'.lower() == tag.name.strip():
                     all_ni_tags.append(tag)
             if not all_ni_tags:
-                self.errorLog.append("Net income information not found.")
+                self.errorLog.append("SecFiling: Net income information not found.")
             self.currentNI = self.getCurrentValue(all_ni_tags)
         except:
             if not self.currentNI:
-                self.errorLog.append("Unable to find Net Income in filing.")
+                self.errorLog.append("SecFiling: Unable to find Net Income in filing.")
             return None
         return self.currentNI
             
@@ -360,7 +360,7 @@ class SecFiling(ABC):
                 startdate = instant
                 enddate = startdate
         else:
-            self.errorLog.append("ERROR: Unable to find dates for contextref '{:s}'".format(contextRef))
+            self.errorLog.append("SecFiling: ERROR: Unable to find dates for contextref '{:s}'".format(contextRef))
             return None
         try:
             sd = datetime.strptime(startdate.text, "%Y-%m-%d")
@@ -380,3 +380,9 @@ class SecFiling(ABC):
     def printErrors(self):
         return ", ".join(str(e) for e in self.errorLog)
             
+    def popErrors(self):
+        """Returns a string of all the errors, separated by '\n', and clears the error log."""
+        errString = "\n".join(str(e) for e in self.errorLog)
+        self.errorLog = []
+        return errString
+        

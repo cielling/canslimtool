@@ -58,8 +58,9 @@ class CanslimParams():
             try:
                 filing.load(fname)
             except BaseException as be:
-                self.errorLog.append("Unable to open filing {:s}.".format(fname))
+                self.errorLog.append("CanslimParams: Unable to open filing {:s}.".format(fname))
                 self.errorLog.append(be)
+                self.errorLog.append(filing.popErrors())
                 return False
             reportDate = self.all10QsDf.iloc[i].date
             if (reportDate > self.fiveYearsAgo):
@@ -87,8 +88,9 @@ class CanslimParams():
             try:
                 filing.load(fname)
             except BaseException as be:
-                self.errorLog.append("Unable to open filing {:s}.".format(fname))
+                self.errorLog.append("CanslimParams: Unable to open filing {:s}.".format(fname))
                 self.errorLog.append(be)
+                self.errorLog.append(filing.popErrors())
                 return False
             reportDate = self.all10KsDf.iloc[i].date
             if (reportDate > self.fiveYearsAgo):
@@ -102,10 +104,10 @@ class CanslimParams():
                     self.currentY = yearKey
         self.n10Ks = n10Ks
         self.n10Qs = n10Qs
-        self.errorLog.append("Loaded {:d} 10Q's and {:d} 10K's.".format(n10Qs, n10Ks))
+        self.errorLog.append("CanslimParams: Loaded {:d} 10Q's and {:d} 10K's.".format(n10Qs, n10Ks))
         self.errorLog.append(", ".join(k for k in self.all10QFilings))
         self.errorLog.append(", ".join(k for k in self.all10KFilings))
-        self.errorLog.append("Current year = {:s}, current quarter = {:s}.".format(self.currentY, self.currentQ))
+        self.errorLog.append("CanslimParams: Current year = {:s}, current quarter = {:s}.".format(self.currentY, self.currentQ))
         return True
     
                 
@@ -194,8 +196,9 @@ class CanslimParams():
                     self.savedContextIds[last3QKey] = self.all10QFilings[last3QKey].getCurrentContextId()
                     eps = yearEps - last1Eps - last2Eps - last3Eps
                 except BaseException as be:
-                    self.errorLog.append("Unable to infer EPS from the last few filings for quarter {:s}.".format(qKey))
+                    self.errorLog.append("CanslimParams: Unable to infer EPS from the last few filings for quarter {:s}.".format(qKey))
                     self.errorLog.append(be)
+                    self.appendAllSecFilingErrorsToLog()
                     return None
             return eps
         return None
@@ -250,8 +253,9 @@ class CanslimParams():
                     last3NI = self.all10QFilings[last3QKey].getNetIncome()
                     NI = yearNI - last1NI - last2NI - last3NI
                 except BaseException as be:
-                    self.errorLog.append("Unable to infer Net Income from the last few filings for quarter {:s}.".format(qKey))
+                    self.errorLog.append("CanslimParams: Unable to infer Net Income from the last few filings for quarter {:s}.".format(qKey))
                     self.errorLog.append(be)
+                    self.appendAllSecFilingErrorsToLog()
                     return None
             return NI
         return None
@@ -290,8 +294,9 @@ class CanslimParams():
                     last3SE = self.all10QFilings[last3QKey].getStockholdersEquity()
                     SE = yearSE - last1SE - last2SE - last3SE
                 except BaseException as be:
-                    self.errorLog.append("Unable to infer Net Income from the last few filings for quarter {:s}.".format(qKey))
+                    self.errorLog.append("CanslimParams: Unable to infer Net Income from the last few filings for quarter {:s}.".format(qKey))
                     self.errorLog.append(be)
+                    self.appendAllSecFilingErrorsToLog()
                     return None
             return SE
         return None
@@ -345,13 +350,14 @@ class CanslimParams():
                 contextIdKey = self.savedContextIds[qKey]
             except BaseException as be:
                 self.errorLog.append(be)
-                self.errorLog.append("Unable to find quarter in list of saved Ids:\n{:s}".format(qKey))
+                self.errorLog.append("CanslimParams: Unable to find quarter in list of saved Ids:\n{:s}".format(qKey))
                 self.errorLog.append(self.savedContextIds)
             try:
                 sales = self.all10QFilings[qKey].getSales(contextIdKey)            
             except BaseException as be:
-                self.errorLog.append("Error getting Sales for quarter {:s}. The filing may not exist, falling on inferring sales from the last few filings.". format(qKey))
+                self.errorLog.append("CanslimParams: Error getting Sales for quarter {:s}. The filing may not exist, falling on inferring sales from the last few filings.". format(qKey))
                 self.errorLog.append(be)
+                self.appendAllSecFilingErrorsToLog()
                 ## Some/most/all? companies submit the 10-K *instead* of the 10-Q for that quarter.
                 ## So I have to calculate the values for that quarter from the 10-K and preceding 3 10-Q's.
                 ## If the missing Q is Q1, then the preceding 3 10's are from the prior year.
@@ -368,8 +374,9 @@ class CanslimParams():
                         - self.all10QFilings[last2QKey].getSales(self.savedContextIds[last2QKey]) \
                         - self.all10QFilings[last3QKey].getSales(self.savedContextIds[last3QKey])
                 except BaseException as be:
-                    self.errorLog.append("Unable to determine sales.")
+                    self.errorLog.append("CanslimParams: Unable to determine sales.")
                     self.errorLog.append(be)
+                    self.appendAllSecFilingErrorsToLog()
                     return None
             return sales
         return None
@@ -399,7 +406,8 @@ class CanslimParams():
         try:
             growth = (epsQ1 / epsQ2) * 100.
         except:
-            self.errorLog.append("Unable to determine quarterly EPS growth between quarters {:d} and {:d}.".format(q1, q2))
+            self.errorLog.append("CanslimParams: Unable to determine quarterly EPS growth between quarters {:d} and {:d}.".format(q1, q2))
+            self.appendAllSecFilingErrorsToLog()
             growth = None
         return growth
     
@@ -414,7 +422,8 @@ class CanslimParams():
         try:
             growth = (epsY1 / epsY2) * 100.
         except:
-            self.errorLog.append("Unable to determine annual EPS growth between years {:d} and {:d}.".format(a1, a2))
+            self.errorLog.append("CanslimParams: Unable to determine annual EPS growth between years {:d} and {:d}.".format(a1, a2))
+            self.appendAllSecFilingErrorsToLog()
             growth = None
         return growth
         
@@ -432,7 +441,8 @@ class CanslimParams():
                 if yKey1 in self.all10KFilings:
                     date1 = self.all10KFilings[yKey1].getReportDate()
                 else:
-                    self.errorLog.append("Year not found in filings: {:s}.".format(yKey1))
+                    self.errorLog.append("CanslimParams: Year not found in filings: {:s}.".format(yKey1))
+                    self.appendAllSecFilingErrorsToLog()
             date2 = None
             try:
                 date2 = self.all10QFilings[self.__getQuarter(q2)].getReportDate()
@@ -443,14 +453,16 @@ class CanslimParams():
                 if yKey2 in self.all10KFilings:
                     date2 = self.all10KFilings[yKey2].getReportDate()
                 else:
-                    self.errorLog.append("Year not found in filings: {:s}.".format(yKey2))
+                    self.errorLog.append("CanslimParams: Year not found in filings: {:s}.".format(yKey2))
+                    self.appendAllSecFilingErrorsToLog()
             eps1 = self.getEpsQuarter(q1)
             eps2 = self.getEpsQuarter(q2)
             try:
                 rate = self.__slope((date2 - date1).days, 0.0, eps2, eps1)
             except BaseException as be:
-                self.errorLog.append("Unable to determine quarterly EPS growth rate for quarters {:s} and {:s}.".format(str(q1), str(q2)))
+                self.errorLog.append("CanslimParams: Unable to determine quarterly EPS growth rate for quarters {:s} and {:s}.".format(str(q1), str(q2)))
                 self.errorLog.append(str(be))
+                self.appendAllSecFilingErrorsToLog()
                 return None
             return rate
         return None
@@ -486,14 +498,15 @@ class CanslimParams():
                         if yKey in self.all10KFilings:
                             x.append((self.all10KFilings[yKey].getReportDate() - firstDate).days)
                         else:
-                            self.errorLog.append("Year not found: {:s}".format(yKey))
+                            self.errorLog.append("CanslimParams: Year not found: {:s}".format(yKey))
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             try:
                 p = polyfit(x, y, 2)
             except BaseException as be:
-                self.errorLog.append("Unable to determine Stability of EPS Growth.")
-                self.errorLog.append("x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
+                self.errorLog.append("CanslimParams: Unable to determine Stability of EPS Growth.")
+                self.errorLog.append("CanslimParams: x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
                 self.errorLog.append(str(be))
+                self.appendAllSecFilingErrorsToLog()
                 return None
             yfit = polyval(p, x)
             sigma = (y - yfit) / y
@@ -533,14 +546,15 @@ class CanslimParams():
                         if yKey in self.all10KFilings:
                             x.append((self.all10KFilings[yKey].getReportDate() - firstDate).days)
                         else:
-                            self.errorLog.append("Year not found: {:s}".format(yKey))
+                            self.errorLog.append("CanslimParams: Year not found: {:s}".format(yKey))
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             try:
                 p = polyfit(x, y, 2)
             except BaseException as be:
-                self.errorLog.append("Unable to determine EPS Growth Acceleration.")
-                self.errorLog.append("x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
+                self.errorLog.append("CanslimParams: Unable to determine EPS Growth Acceleration.")
+                self.errorLog.append("CanslimParams: x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
                 self.errorLog.append(str(be))
+                self.appendAllSecFilingErrorsToLog()
                 return None
             return p
         return None
@@ -556,7 +570,8 @@ class CanslimParams():
         try:
             growth = (salesQ1 / salesQ2) * 100.
         except:
-            self.errorLog.append("Unable to determine quarterly Sales growth between quarters {:d} and {:d}.".format(q1, q2))
+            self.errorLog.append("CanslimParams: Unable to determine quarterly Sales growth between quarters {:d} and {:d}.".format(q1, q2))
+            self.appendAllSecFilingErrorsToLog()
             growth = None
         return growth
      
@@ -574,7 +589,7 @@ class CanslimParams():
                 if yKey1 in self.all10KFilings:
                     date1 = self.all10KFilings[yKey1].getReportDate()
                 else:
-                    self.errorLog.append("Year not found in filings: {:s}.".format(yKey1))
+                    self.errorLog.append("CanslimParams: Year not found in filings: {:s}.".format(yKey1))
             date2 = None
             try:
                 date2 = self.all10QFilings[self.__getQuarter(q2)].getReportDate()
@@ -585,14 +600,15 @@ class CanslimParams():
                 if yKey2 in self.all10KFilings:
                     date2 = self.all10KFilings[yKey2].getReportDate()
                 else:
-                    self.errorLog.append("Year not found in filings: {:s}.".format(yKey2))
+                    self.errorLog.append("CanslimParams: Year not found in filings: {:s}.".format(yKey2))
             sales1 = self.getSalesQuarter(q1)
             sales2 = self.getSalesQuarter(q2)
             try:
                 rate = self.__slope((date2 - date1).days, 0.0, sales2, sales1)
             except BaseException as be:
-                self.errorLog.append("Unable to determine sales growth rate between quarters {:d} and {:d}.".format(q1, q2))
+                self.errorLog.append("CanslimParams: Unable to determine sales growth rate between quarters {:d} and {:d}.".format(q1, q2))
                 self.errorLog.append(be)
+                self.appendAllSecFilingErrorsToLog()
                 return None
             return rate
         return None
@@ -628,16 +644,17 @@ class CanslimParams():
                         if yKey in self.all10KFilings:
                             x.append((self.all10KFilings[yKey].getReportDate() - firstDate).days)
                         else:
-                            self.errorLog.append("Year not found: {:s}".format(yKey))
+                            self.errorLog.append("CanslimParams: Year not found: {:s}".format(yKey))
                 else:
                     self.errorLog.append("Unable to get the sales data for this quarter: {:d}".format(i))
             ## Fit a polynomial of degree 2 through the data: ax**2 + bx + c. 'a' should be the acceleration
             try:
                 p = polyfit(x, y, 2)
             except BaseException as be:
-                self.errorLog.append("Unable to determine Sales Growth Acceleration.")
-                self.errorLog.append("x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
+                self.errorLog.append("CanslimParams: Unable to determine Sales Growth Acceleration.")
+                self.errorLog.append("CanslimParams: x= {:s}, y= {:s}".format((",".join(str(i) for i in x)), (",".join(str(j) for j in y))))
                 self.errorLog.append(str(be))
+                self.appendAllSecFilingErrorsToLog()
                 return None
             return p
         return None
@@ -648,14 +665,23 @@ class CanslimParams():
         with open(join("Logs", "{:s}_log.txt".format(self.ticker)), "w+") as f:
             for item in self.errorLog:
                 f.write("{:s}\n".format(str(item)))
-            for item in self.all10QFilings:
-                f.write("\n{:s}:\n".format(item))
-                f.write(str(self.all10QFilings[item].printErrors()))
-            for item in self.all10KFilings:
-                f.write("\n{:s}:\n".format(item))
-                f.write(str(self.all10KFilings[item].printErrors()))
-                
-                
+    
+
+    def appendAllSecFilingErrorsToLog(self):
+        """Iterates over all SecFiling objects, retrieves their errors, and appends them to self.errorLog."""
+        ## Go through all the SecFilings and retrieve error messages, if any.
+        for k in self.all10QFilings:
+            errString = ""
+            errString = self.all10QFilings[k].popErrors()
+            if errString:
+                self.errorLog.append("{:s} : {:s}".format(k, errString))
+        for k in self.all10KFilings:
+            errString = ""
+            errString = self.all10KFilings[k].popErrors()
+            if errString:
+                self.errorLog.append("{:s} : {:s}".format(k, errString))
+            
+            
     def plotEpsQuarter(self):
         """Generates a log-plot of quarterly EPS data."""
         pass
