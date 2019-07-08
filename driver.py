@@ -50,6 +50,7 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 dfOut['Eps_growth_accel_last_10_Q'] = -99.99
                 dfOut['Sales_current_Q_per_prior_Q'] = -99.99
                 dfOut['Sales_growth_accel_last_3_Q'] = -99.99
+                dfOut['Score'] = -99.99
                 ## Get the 10-K and 10-Q filing references from the database
                 ## First, look up the CIK for the ticker symbol
                 cursor.execute('''SELECT * FROM cik_ticker_name WHERE ticker=?;''',(symbol,))
@@ -195,6 +196,23 @@ def analyzeTicker(df, doRestart, procNum = 0):
                         dfOut.loc[symbolIdx, 'Sales_growth_accel_last_3_Q'] = salesAcc[0]
                     except BaseException as be:
                         pass
+                        
+                    ## Calculate a "score" for each stock.
+                    dfOut.loc[symbolIdx, 'Score'] = \
+                            dfOut.loc[symbolIdx, 'Annual_eps_growth_Y0_Y1'] \
+                            * dfOut.loc[symbolIdx, 'Annual_eps_growth_Y1_Y2'] \
+                            * dfOut.loc[symbolIdx, 'Annual_eps_growth_Y2_Y3'] \
+                            * dfOut.loc[symbolIdx, 'Current_roe'] \
+                            * dfOut.loc[symbolIdx, 'Eps_current_Q_per_same_Q_prior_year'] \
+                            * dfOut.loc[symbolIdx, 'Eps_growth_accel_last_10_Q'] \
+                            * dfOut.loc[symbolIdx, 'Eps_growth_accel_last_3_Q'] \
+                            * dfOut.loc[symbolIdx, 'Eps_previous_Q_per_same_Q_prior_year'] \
+                            * dfOut.loc[symbolIdx, 'Excellence_of_eps_increase'] \
+                            * dfOut.loc[symbolIdx, 'Num_years_annual_eps_increasing_last_3_years'] \
+                            * dfOut.loc[symbolIdx, 'Sales_current_Q_per_prior_Q'] \
+                            * dfOut.loc[symbolIdx, 'Sales_growth_accel_last_3_Q'] \
+                            / (dfOut.loc[symbolIdx, 'Num_Q_with_eps_growth_deceleration'] + 1.0)
+                             
 
                     canslim.logErrors()
                     del canslim
