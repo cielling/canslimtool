@@ -208,7 +208,8 @@ class SecFiling(ABC):
         self.currentRoe = 0.0
         if self.currentSE and self.currentNI and self.currentSE > 0.0:
             self.currentRoe = self.currentNI / self.currentSE
-        return self.currentRoe
+        # Multiply by 100 to turn it into a percentage.
+        return self.currentRoe * 100.0
         
         
     def getCurrentValue(self, tagList, duration, eps):
