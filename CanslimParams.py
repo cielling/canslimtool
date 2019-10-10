@@ -284,15 +284,15 @@ class CanslimParams():
                     year10KKey = "Y" + qKey[:4]
                     yearSE = self.all10KFilings[year10KKey].getStockholdersEquity()
                     
-                    last1QKey = self.__getQuarter(quarter - 1)
-                    last1SE = self.all10QFilings[last1QKey].getStockholdersEquity()
+                    # last1QKey = self.__getQuarter(quarter - 1)
+                    # last1SE = self.all10QFilings[last1QKey].getStockholdersEquity()
                     
-                    last2QKey = self.__getQuarter(quarter - 2)
-                    last2SE = self.all10QFilings[last2QKey].getStockholdersEquity()
+                    # last2QKey = self.__getQuarter(quarter - 2)
+                    # last2SE = self.all10QFilings[last2QKey].getStockholdersEquity()
                     
-                    last3QKey = self.__getQuarter(quarter - 3)
-                    last3SE = self.all10QFilings[last3QKey].getStockholdersEquity()
-                    SE = yearSE - last1SE - last2SE - last3SE
+                    # last3QKey = self.__getQuarter(quarter - 3)
+                    # last3SE = self.all10QFilings[last3QKey].getStockholdersEquity()
+                    SE = yearSE
                 except BaseException as be:
                     self.errorLog.append("CanslimParams: Unable to infer Net Income from the last few filings for quarter {:s}.".format(qKey))
                     self.errorLog.append(be)
@@ -302,35 +302,39 @@ class CanslimParams():
         return None
         
         
-    def getRoeCurrent(self):
+    def getRoeTTM(self):
         """Returns the Return on Equity over the last four quarters (TTM).
         
         ROE is calculated as:
         
-            (change in Net Income) / (change in Stockholders' Equity).
+            (Net Income) / (Stockholders' Equity).
         """
         roe = 0.0
         # Calculate the change in Net Income and Stockholders' Equity over the last twelve months,
         # and find the ratio.
         roe = 0.0
-        niDiff = 0.0
-        ni1 = self.getNetIncomeQuarter(0)
-        ni2 = self.getNetIncomeQuarter(-4)
-        if ni1 and ni2:
-            niDiff = ni1 - ni2
+        niSum = 0.0
+        ni0 = self.getNetIncomeQuarter(0)
+        ni1 = self.getNetIncomeQuarter(-1)
+        ni2 = self.getNetIncomeQuarter(-2)
+        ni3 = self.getNetIncomeQuarter(-3)
+        if ni0 and ni1 and ni2 and ni3:
+            niSum = ni0 + ni1 + ni2 + ni3
         else:
-            print("Unable to retrieve Net Income for quarter 0 or -4 or both.")
-        seDiff = 0.0
-        se1 = self.getStockholdersEquityQuarter(0)
-        se2 = self.getStockholdersEquityQuarter(-4)
+            print("Unable to retrieve Net Income for quarter 0, -1, -2, -3 or all.")
+        seAvg = 0.0
+        se0 = self.getStockholdersEquityQuarter(0)
+        se1 = self.getStockholdersEquityQuarter(-1)
+        se2 = self.getStockholdersEquityQuarter(-2)
+        se3 = self.getStockholdersEquityQuarter(-3)
         if se1 and se2:
-            seDiff = se1 - se2
+            seAvg = (se0 + se1 + se2 + se3) * 0.25
         else:
             print("Unable to retrieve Stockholders' Equity for quarter 0 or -4 or both.")
-        if (seDiff != 0.0):
-            roe = niDiff / seDiff
+        if (seAvg != 0.0):
+            roe = niSum / seAvg
         # Make roe negative if both S.E. and N.I. have decreased over the last year.
-        if seDiff < 0.0 and niDiff < 0.0:
+        if seAvg < 0.0 and niSum < 0.0:
             roe *= -1.0
         # Multiply by 100 to make a percentage.
         return roe * 100.0
