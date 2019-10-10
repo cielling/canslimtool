@@ -168,7 +168,7 @@ def analyzeTicker(df, doRestart, procNum = 0):
                         dfOut.loc[symbolIdx, 'Num_Q_with_eps_growth_deceleration'] = totalDecel
                         
                     ## Calculate the ROE of the current quarter
-                    roe = canslim.getRoeCurrent()
+                    roe = canslim.getRoeTTM()
                     if roe:
                         dfOut.loc[symbolIdx, 'Current_roe'] = roe
                         
@@ -242,9 +242,9 @@ tStart = datetime.now()
 
 ## Update the idx and cik_ticker_name tables in the database
 print("Updating master index.")
-#get_list_sec_filings ()
+get_list_sec_filings ()
 print("Updating CIK-ticker lookup table.")
-#get_cik_ticker_lookup_db ()
+get_cik_ticker_lookup_db ()
 
     
 ## Read in the screener_results.xls file
@@ -287,7 +287,7 @@ for symbol in df.Symbol:
         print(dfAnalyzed)
         dfAnalyzed.to_excel(screenerResultsFileAnalysed, index=None)
         ###### REMOVE THIS IN PRODUCTION RUNS!!!!
-        count += 1
+        #count += 1
         if doTicker:
             count += 100
     if count > 100:
