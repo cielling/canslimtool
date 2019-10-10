@@ -99,9 +99,10 @@ class SecFiling(ABC):
                 for tag in doc_tag:        
                     ## Sometimes the description seems to be (mis-)named by the default instance document file named.
                     ## Don't 'break', to give the first if statement priority.
-                    if description.startswith("EX-101.INS".lower()):
-                        ## Avoid overwriting a previously found xbrl instance
-                        if not self.xbrlInstance:
+                    desc_tag = tag.find("description")
+                    if desc_tag:
+                        description = desc_tag.get_text().lower()
+                        if description.startswith("EX-101.INS".lower()):
                             self.xbrlInstance = tag
                             break
                     
@@ -145,7 +146,13 @@ class SecFiling(ABC):
         all_eps_tags = []
         try:
             for tag in self.all_tags:
-                if 'us-gaap:earningspersharebasic' in tag.name:
+                if 'us-gaap:earningspersharebasic' in tag.name.lower():
+                    all_eps_tags.append(tag)
+                elif 'us-gaap:IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax'.lower() in tag.name.lower():
+                    ## NRP uses this tag (wtf?!?)
+                    all_eps_tags.append(tag)
+                elif 'us-gaap:EarningsPerShareBasic' in tag.name:
+                    ## Used by MMM
                     all_eps_tags.append(tag)
             self.currentEps = self.getCurrentValue(all_eps_tags)
         except:
@@ -190,6 +197,10 @@ class SecFiling(ABC):
                         all_sales_tags.append(tag)
                 ## The 10-Q of CRVL for 2018-Q1 (filing date 2017/12/31) uses this tag:
                 elif 'us-gaap:SalesRevenueServicesNet'.lower() == tag.name.strip():
+                    if (tag.attrs)['contextref'] == contextId:
+                        all_sales_tags.append(tag)
+                elif 'us-gaap:IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest'.lower() == tag.name.strip():
+                    ## NRP uses this tag (hopefully it's the right one for sales)
                     if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
         except BaseException as be:
