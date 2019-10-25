@@ -102,8 +102,9 @@ class CanslimParams():
                 if reportDate > mostRecentDate:
                     mostRecentDate = reportDate
                     self.currentY = yearKey
-        self.n10Ks = n10Ks
-        self.n10Qs = n10Qs
+        ## Update these with the actual number of filings that were loaded.
+        self.n10Ks = len(self.all10KFilings)
+        self.n10Qs = len(self.all10QFilings)
         self.errorLog.append("CanslimParams: Loaded {:d} 10Q's and {:d} 10K's.".format(n10Qs, n10Ks))
         self.errorLog.append(", ".join(k for k in self.all10QFilings))
         self.errorLog.append(", ".join(k for k in self.all10KFilings))
@@ -327,7 +328,7 @@ class CanslimParams():
         se1 = self.getStockholdersEquityQuarter(-1)
         se2 = self.getStockholdersEquityQuarter(-2)
         se3 = self.getStockholdersEquityQuarter(-3)
-        if se1 and se2:
+        if se0 and se1 and se2 and se3:
             seAvg = (se0 + se1 + se2 + se3) * 0.25
         else:
             print("Unable to retrieve Stockholders' Equity for quarter 0 or -4 or both.")
