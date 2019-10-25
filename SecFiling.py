@@ -99,6 +99,13 @@ class SecFiling(ABC):
                 for tag in doc_tag:        
                     ## Sometimes the description seems to be (mis-)named by the default instance document file named.
                     ## Don't 'break', to give the first if statement priority.
+                    ## The "ex-..." seems to more reliably be in the TYPE-tag than the Description-tag
+                    desc_tag = tag.find("type")
+                    if desc_tag:
+                        description = desc_tag.get_text().lower()
+                        if description.startswith("EX-101.INS".lower()):
+                            self.xbrlInstance = tag
+                            break
                     desc_tag = tag.find("description")
                     if desc_tag:
                         description = desc_tag.get_text().lower()
@@ -143,16 +150,20 @@ class SecFiling(ABC):
         
     def getEps(self):
         """Retrieve the current EPS from the filing."""
+        possible_tags = [\
+            ## The standard tag, used by most (MMM uses all lower-case)
+            'us-gaap:EarningsPerShareBasic'.lower()\
+            ## NRP uses this tag (wtf?!?)
+            ,'us-gaap:IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax'.lower()\
+            ## Used by OSK
+            ,'us-gaap:IncomeLossFromContinuingOperationsPerBasicShare'.lower()\
+            ## WK uses this tag:
+            ,'us-gaap:EarningsPerShareBasicAndDiluted'.lower()\
+            ]
         all_eps_tags = []
         try:
             for tag in self.all_tags:
-                if 'us-gaap:earningspersharebasic' in tag.name.lower():
-                    all_eps_tags.append(tag)
-                elif 'us-gaap:IncomeLossFromContinuingOperationsPerOutstandingLimitedPartnershipUnitBasicNetOfTax'.lower() in tag.name.lower():
-                    ## NRP uses this tag (wtf?!?)
-                    all_eps_tags.append(tag)
-                elif 'us-gaap:EarningsPerShareBasic' in tag.name:
-                    ## Used by MMM
+                if tag.name.strip().lower() in possible_tags:
                     all_eps_tags.append(tag)
             self.currentEps = self.getCurrentValue(all_eps_tags)
         except:
@@ -173,36 +184,68 @@ class SecFiling(ABC):
                 return -99.0
             else:
                 contextId = self.currentContextId
+        ## Collect a list of possible tags to check for to get sales. There are a lot, but so far
+        ## there are no collisions within a statement for these.
+        possible_tags = [\
+            ## The filings seem to use either 'Revenues' or 'SalesRevenuesNet' to indicate the net sales amount
+            'us-gaap:Revenues'.lower()\
+            ,'us-gaap:SalesRevenuesNet'.lower()\
+            ## Some of AAPL's statements use this tag:
+            ,'us-gaap:salesrevenuenet'.lower()\
+            ## Some of AMG's (and JNJ, OSK) statements use this tags:
+            ,'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax'.lower()\
+            ## Some of AMG's statements also sometimes use this tag:
+            ,'us-gaap:AssetManagementFees1'.lower()\
+            ## The 10-Q of CRVL for 2018-Q1 (filing date 2017/12/31) uses this tag:
+            ,'us-gaap:SalesRevenueServicesNet'.lower()\
+            ## NRP uses this tag (hopefully it's the right one for sales)
+            ,'us-gaap:IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest'.lower()\
+            ## INS uses this tag:
+            ,'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax'.lower()\
+            ## JNJ's 10-Q for 2018Q2 uses this tag?!?:
+            ,'us-gaap:NewAccountingPronouncementsAndChangesInAccountingPrinciplesTextBlock'.lower()\
+            ]
         all_sales_tags = []
         try:
             for tag in self.all_tags:
                 ## The filings seem to use either 'Revenues' or 'SalesRevenuesNet' to indicate the net sales amount
                 ## But the 'Revenues' tag also contains other stuff, need to filter it by its contextref attribute
-                if 'us-gaap:Revenues'.lower() == tag.name.strip():
+                if tag.name.strip().lower() in possible_tags:
                     if (tag.attrs)['contextref'] == contextId:
                         all_sales_tags.append(tag)
-                elif 'us-gaap:SalesRevenuesNet'.lower() == tag.name.strip():
-                    if (tag.attrs)['contextref'] == contextId:
-                        all_sales_tags.append(tag)
-                ## Some of AAPL's statements use this tag:
-                elif 'us-gaap:salesrevenuenet'.lower() == tag.name.strip():
-                    if (tag.attrs)['contextref'] == contextId:
-                        all_sales_tags.append(tag)
-                ## Some of AMG's statements use one of these two tags:
-                elif 'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax'.lower() == tag.name.strip():
-                    if (tag.attrs)['contextref'] == contextId:
-                        all_sales_tags.append(tag)
-                elif 'us-gaap:AssetManagementFees1'.lower() == tag.name.strip():
-                    if (tag.attrs)['contextref'] == contextId:
-                        all_sales_tags.append(tag)
-                ## The 10-Q of CRVL for 2018-Q1 (filing date 2017/12/31) uses this tag:
-                elif 'us-gaap:SalesRevenueServicesNet'.lower() == tag.name.strip():
-                    if (tag.attrs)['contextref'] == contextId:
-                        all_sales_tags.append(tag)
-                elif 'us-gaap:IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest'.lower() == tag.name.strip():
-                    ## NRP uses this tag (hopefully it's the right one for sales)
-                    if (tag.attrs)['contextref'] == contextId:
-                        all_sales_tags.append(tag)
+                # if 'us-gaap:Revenues'.lower() == tag.name.strip().lower():
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
+                # elif 'us-gaap:SalesRevenuesNet'.lower() == tag.name.strip().lower():
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
+                # Some of AAPL's statements use this tag:
+                # elif 'us-gaap:salesrevenuenet'.lower() == tag.name.strip().lower():
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
+                # Some of AMG's (and JNJ, OSK) statements use one of these two tags:
+                # elif 'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax'.lower() == tag.name.strip().lower():
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
+                # elif 'us-gaap:AssetManagementFees1'.lower() == tag.name.strip().lower():
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
+                # The 10-Q of CRVL for 2018-Q1 (filing date 2017/12/31) uses this tag:
+                # elif 'us-gaap:SalesRevenueServicesNet'.lower() == tag.name.strip().lower():
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
+                # elif 'us-gaap:IncomeLossFromContinuingOperationsIncludingPortionAttributableToNoncontrollingInterest'.lower() == tag.name.strip().lower():
+                    # NRP uses this tag (hopefully it's the right one for sales)
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
+                # INS uses this tag:
+                # elif 'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax'.lower() == tag.name.strip().lower():
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
+                # JNJ's 10-Q for 2018Q2 uses this tag?!?:
+                # elif 'us-gaap:NewAccountingPronouncementsAndChangesInAccountingPrinciplesTextBlock'.lower() == tag.name.strip().lower():
+                    # if (tag.attrs)['contextref'] == contextId:
+                        # all_sales_tags.append(tag)
         except BaseException as be:
             self.errorLog.append("SecFiling: Unable to find Sales data in filing.")
             self.errorLog.append(be)
