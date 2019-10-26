@@ -46,7 +46,7 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 dfOut['Eps_growth_accel_last_3_Q'] = -99.99
                 dfOut['Num_Q_with_eps_growth_deceleration'] = -99.99
                 dfOut['Current_roe'] = -99.99
-                dfOut['Stability_of_eps_growth_last_16_Q'] = -99.99
+                dfOut['Stability_of_eps_growth_last_12_Q'] = -99.99
                 dfOut['Eps_growth_accel_last_10_Q'] = -99.99
                 dfOut['Sales_current_Q_per_prior_Q'] = -99.99
                 dfOut['Sales_growth_accel_last_3_Q'] = -99.99
@@ -85,6 +85,8 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 ## Remove any funny symbols in the columns. Apparently has to be done one-by-one.
                 for i in idx.index:
                     idx.loc[i,'conm'] = idx.loc[i,'conm'].replace("/", "") 
+                ## Sort by date in descending order (most recent is first)
+                idx.sort_values(by=['date'], inplace=True, ascending=False)
                 all_10Qs = idx[idx.type == '10-Q']
                 #verify that this gets the amended 10-Q's
                 #all_filings.append (all_links[all_links.type == '10-Q\A'])
@@ -173,9 +175,9 @@ def analyzeTicker(df, doRestart, procNum = 0):
                         dfOut.loc[symbolIdx, 'Current_roe'] = roe
                         
                     ## Calculate the stability (goodness-of-fit) for the EPS growth over the last 16 quarters
-                    stability = canslim.getStabilityOfEpsGrowth(16)
+                    stability = canslim.getStabilityOfEpsGrowth(12)
                     if stability:
-                        dfOut.loc[symbolIdx, 'Stability_of_eps_growth_last_16_Q'] = stability
+                        dfOut.loc[symbolIdx, 'Stability_of_eps_growth_last_12_Q'] = stability
                         
                     ## Calculate the EPS growth acceleration over the last 10 quarters
                     epsAcc2 = canslim.getEpsGrowthAcceleration(10)
@@ -211,7 +213,9 @@ def analyzeTicker(df, doRestart, procNum = 0):
                             * dfOut.loc[symbolIdx, 'Num_years_annual_eps_increasing_last_3_years'] \
                             * dfOut.loc[symbolIdx, 'Sales_current_Q_per_prior_Q'] \
                             * dfOut.loc[symbolIdx, 'Sales_growth_accel_last_3_Q'] \
-                            / (dfOut.loc[symbolIdx, 'Num_Q_with_eps_growth_deceleration'] + 1.0)
+                            / (dfOut.loc[symbolIdx, 'Num_Q_with_eps_growth_deceleration'] + 1.0\
+                            #/ dfOut.loc[symbolIdx, 'Stability_of_eps_growth_last_12_Q']\
+                            )
                              
 
                     canslim.logErrors()
@@ -323,7 +327,7 @@ print("Runtime was {:d} sec.".format((tEnd - tStart).seconds))
                     # df['Eps_growth_accel_last_3_Q'] = -99.99
                     # df['Num_Q_with_eps_growth_deceleration'] = -99.99
                     # df['Current_roe'] = -99.99
-                    # df['Stability_of_eps_growth_last_16_Q'] = -99.99
+                    # df['Stability_of_eps_growth_last_12_Q'] = -99.99
                     # df['Eps_growth_accel_last_10_Q'] = -99.99
                     # df['Sales_current_Q_per_prior_Q'] = -99.99
                     # df['Sales_growth_accel_last_3_Q'] = -99.99
