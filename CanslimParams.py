@@ -15,8 +15,8 @@ class CanslimParams():
         ## Format the 'date' column into datetime format
         self.all10QsDf = all10QsDf
         self.all10KsDf = all10KsDf
-        self.today = datetime.now()
-        self.fiveYearsAgo = self.today - timedelta(days=5*365.25)
+#        self.today = datetime.now()
+#        self.fiveYearsAgo = self.today - timedelta(days=5*365.25)
         self.currentQ = ""
         self.currentY = ""
         self.quartersList = []
@@ -29,12 +29,14 @@ class CanslimParams():
         self.errorLog = []
 
         
-    def loadData(self, downloadPath = "SECDATA"):
+    def loadData(self, downloadPath = "SECDATA", oldestDate = None):
         """Loads the relevant SEC filings for analysis.
         
         Loads the last 4 10-K filings and the last 16(?) 10-Q filings. If necessary, 
         retrieves them from EDGAR and saves the raw files.
         """
+        if not oldestDate:
+            oldestDate = datetime.now() - timedelta(days=5*365.25)
         ## TODO: Look through the idx database and find all filings available for 'ticker'. -> in main()
         self.all10QFilings = {}
         self.all10KFilings = {}
@@ -44,26 +46,30 @@ class CanslimParams():
             return False
         ## The following loops lend themselves to parallelizing, if that's possible
         ## Create a dict of all the 10Q-filings objects
-        mostRecentDate = self.fiveYearsAgo
+        mostRecentDate = oldestDate
         for i in range(0, n10Qs):
-            filing = SecFiling10Q(self.ticker)
-            ## Download file if necessary, and generate the file name
-            fname = filing.download(self.all10QsDf.iloc[i].cik, \
-                                    self.all10QsDf.iloc[i].conm, \
-                                    self.all10QsDf.iloc[i].type, \
-                                    self.all10QsDf.iloc[i].date.strftime("%Y-%m-%f"), \
-                                    self.all10QsDf.iloc[i].path, \
-                                    downloadPath)
-            ## Load the file into the object instance
-            try:
-                filing.load(fname)
-            except BaseException as be:
-                self.errorLog.append("CanslimParams: Unable to open filing {:s}.".format(fname))
-                self.errorLog.append(be)
-                self.errorLog.append(filing.popErrors())
-                return False
-            reportDate = self.all10QsDf.iloc[i].date
-            if (reportDate > self.fiveYearsAgo):
+            ## Only load/download filing if newer than the requested oldest date.
+            ## Note, compares FILING date, not report date, to oldestDate.
+            if (self.all10QsDf.iloc[i].date.to_pydatetime()) > oldestDate:
+                filing = SecFiling10Q(self.ticker)
+                ## Download file if necessary, and generate the file name
+                fname = filing.download(self.all10QsDf.iloc[i].cik, \
+                                        self.all10QsDf.iloc[i].conm, \
+                                        self.all10QsDf.iloc[i].type, \
+                                        self.all10QsDf.iloc[i].date.strftime("%Y-%m-%f"), \
+                                        self.all10QsDf.iloc[i].path, \
+                                        downloadPath)
+                ## Load the file into the object instance
+                try:
+                    filing.load(fname)
+                except BaseException as be:
+                    self.errorLog.append("CanslimParams: Unable to open filing {:s}.".format(fname))
+                    self.errorLog.append(be)
+                    self.errorLog.append(filing.popErrors())
+                    return False
+                ## Note that the report date is not the filing due date, i.e. will calculate to be the
+                ## quarter AFTER the one the report is about.
+                reportDate = self.all10QsDf.iloc[i].date
                 ## Use the year+quarter (for filing date) information to create a key into the dict
                 quarterKey = "{:d}-Q{:d}".format(reportDate.year, int((reportDate.month - 1) / 3 + 1))
                 ## TODO: verify that each filing was successfully loaded
@@ -74,26 +80,26 @@ class CanslimParams():
                     self.currentQ = quarterKey
                     
         # Create a dict of all the 10K-filing objects:
-        mostRecentDate = self.fiveYearsAgo
+        mostRecentDate = oldestDate
         for i in range(0, n10Ks):
-            filing = SecFiling10K(self.ticker)
-            ## Download file if necessary, and generate the file name
-            fname = filing.download(self.all10KsDf.iloc[i].cik, \
-                                    self.all10KsDf.iloc[i].conm, \
-                                    self.all10KsDf.iloc[i].type, \
-                                    self.all10KsDf.iloc[i].date.strftime("%Y-%m-%f"), \
-                                    self.all10KsDf.iloc[i].path, \
-                                    downloadPath)
-            ## Load the file into the object instance
-            try:
-                filing.load(fname)
-            except BaseException as be:
-                self.errorLog.append("CanslimParams: Unable to open filing {:s}.".format(fname))
-                self.errorLog.append(be)
-                self.errorLog.append(filing.popErrors())
-                return False
-            reportDate = self.all10KsDf.iloc[i].date
-            if (reportDate > self.fiveYearsAgo):
+            if (self.all10KsDf.iloc[i].date.to_pydatetime()) > oldestDate:
+                filing = SecFiling10K(self.ticker)
+                ## Download file if necessary, and generate the file name
+                fname = filing.download(self.all10KsDf.iloc[i].cik, \
+                                        self.all10KsDf.iloc[i].conm, \
+                                        self.all10KsDf.iloc[i].type, \
+                                        self.all10KsDf.iloc[i].date.strftime("%Y-%m-%f"), \
+                                        self.all10KsDf.iloc[i].path, \
+                                        downloadPath)
+                ## Load the file into the object instance
+                try:
+                    filing.load(fname)
+                except BaseException as be:
+                    self.errorLog.append("CanslimParams: Unable to open filing {:s}.".format(fname))
+                    self.errorLog.append(be)
+                    self.errorLog.append(filing.popErrors())
+                    return False
+                reportDate = self.all10KsDf.iloc[i].date
                 ## Use the year+quarter (for filing date) information to create a key into the dict
                 yearKey = "Y{:d}".format(reportDate.year)
                 ## TODO: verify that each filing was successfully loaded
