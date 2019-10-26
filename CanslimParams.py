@@ -522,7 +522,7 @@ class CanslimParams():
             yfit = polyval(p, x)
             sigma = (y - yfit) / y
             error = sigma * sigma
-            res = error.sum()
+            res = 1.0 / error.sum()
             return res
         return None
     
