@@ -285,10 +285,10 @@ for symbol in df.Symbol:
         analyzed.append(symbol)
         dfAnalyzedTicker = analyzeTicker(df[df.Symbol == symbol], doRestart)
         doRestart = True
-        print(dfAnalyzedTicker)
+        #print(dfAnalyzedTicker)
         ## TODO: appending to dfAnalzed doesn't work (because it's initially empty?). Fix this.
         dfAnalyzed = pd.concat([dfAnalyzedTicker, dfAnalyzed])
-        print(dfAnalyzed)
+        print(dfAnalyzed[dfAnalyzed.Symbol == symbol])
         dfAnalyzed.to_excel(screenerResultsFileAnalysed, index=None)
         ###### REMOVE THIS IN PRODUCTION RUNS!!!!
         #count += 1
