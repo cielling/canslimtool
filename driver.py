@@ -43,13 +43,13 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 dfOut['Annual_eps_growth_Y1_Y2'] = -99.99
                 dfOut['Annual_eps_growth_Y2_Y3'] = -99.99
                 dfOut['Excellence_of_eps_increase'] = -99.99
-                dfOut['Eps_growth_accel_last_3_Q'] = -99.99
+                dfOut['Eps_growth_accel_last_5_Q'] = -99.99
                 dfOut['Num_Q_with_eps_growth_deceleration'] = -99.99
                 dfOut['Current_roe'] = -99.99
                 dfOut['Stability_of_eps_growth_last_12_Q'] = -99.99
                 dfOut['Eps_growth_accel_last_10_Q'] = -99.99
                 dfOut['Sales_current_Q_per_prior_Q'] = -99.99
-                dfOut['Sales_growth_accel_last_3_Q'] = -99.99
+                dfOut['Sales_growth_accel_last_4_Q'] = -99.99
                 dfOut['Score'] = -99.99
                 ## Get the 10-K and 10-Q filing references from the database
                 ## First, look up the CIK for the ticker symbol
@@ -139,10 +139,10 @@ def analyzeTicker(df, doRestart, procNum = 0):
                     dfOut.loc[symbolIdx, 'Excellence_of_eps_increase'] = count
                         
                     ## Calculate the acceleration of EPS growth for the last three quarters
-                    epsAcc = canslim.getEpsGrowthAcceleration(3)
+                    epsAcc = canslim.getEpsGrowthAcceleration(5)
                     try:
                         if epsAcc.all():
-                            dfOut.loc[symbolIdx, 'Eps_growth_accel_last_3_Q'] = epsAcc[0]
+                            dfOut.loc[symbolIdx, 'Eps_growth_accel_last_5_Q'] = epsAcc[0]
                     except:
                         pass
                         
@@ -193,9 +193,9 @@ def analyzeTicker(df, doRestart, procNum = 0):
                         dfOut.loc[symbolIdx, 'Sales_current_Q_per_prior_Q'] = salesGrowth
                         
                     ## Calculate the acceleration of Sales growth for the last three quarters
-                    salesAcc = canslim.getSalesGrowthAcceleration(3)
+                    salesAcc = canslim.getSalesGrowthAcceleration(4)
                     try:
-                        dfOut.loc[symbolIdx, 'Sales_growth_accel_last_3_Q'] = salesAcc[0]
+                        dfOut.loc[symbolIdx, 'Sales_growth_accel_last_4_Q'] = salesAcc[0]
                     except BaseException as be:
                         pass
                         
@@ -207,12 +207,12 @@ def analyzeTicker(df, doRestart, procNum = 0):
                             * dfOut.loc[symbolIdx, 'Current_roe'] \
                             * dfOut.loc[symbolIdx, 'Eps_current_Q_per_same_Q_prior_year'] \
                             * dfOut.loc[symbolIdx, 'Eps_growth_accel_last_10_Q'] \
-                            * dfOut.loc[symbolIdx, 'Eps_growth_accel_last_3_Q'] \
+                            * dfOut.loc[symbolIdx, 'Eps_growth_accel_last_5_Q'] \
                             * dfOut.loc[symbolIdx, 'Eps_previous_Q_per_same_Q_prior_year'] \
                             * dfOut.loc[symbolIdx, 'Excellence_of_eps_increase'] \
                             * dfOut.loc[symbolIdx, 'Num_years_annual_eps_increasing_last_3_years'] \
                             * dfOut.loc[symbolIdx, 'Sales_current_Q_per_prior_Q'] \
-                            * dfOut.loc[symbolIdx, 'Sales_growth_accel_last_3_Q'] \
+                            * dfOut.loc[symbolIdx, 'Sales_growth_accel_last_4_Q'] \
                             / (dfOut.loc[symbolIdx, 'Num_Q_with_eps_growth_deceleration'] + 1.0\
                             #/ dfOut.loc[symbolIdx, 'Stability_of_eps_growth_last_12_Q']\
                             )
