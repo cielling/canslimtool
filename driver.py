@@ -53,27 +53,9 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 dfOut['Score'] = -99.99
                 ## Get the 10-K and 10-Q filing references from the database
                 ## First, look up the CIK for the ticker symbol
-                cursor.execute('''SELECT * FROM cik_ticker_name WHERE ticker=?;''',(symbol,))
-                res = cursor.fetchall()
-                ## If this ticker is not in the lookup database, try to search on the web.
-                if not res:
-                    record = lookup_cik_ticker(symbol)
-                    if not record:
-                        errorlog.write("Unsuccessful.")
-                        return dfOut
-                    #insert data into the table
-                    #cursor.execute ('INSERT INTO cik_ticker_name VALUES (?, ?, ?)', record)
-                    #conn.commit ()
-                    cik = record[0]
-                    errorlog.write(cik)
-                else:
-                    try: 
-                        cik = res[0][0]
-                    except BaseException as be:
-                        errorlog.write("Unable to locate CIK for ticker {:s}.".format(symbol))
-                        errorlog.write("Record in database: {:s}".format(str(res)))
-                        errorlog.write(str(be))
-                        return dfOut
+                cik = get_cik_for_ticker_db(ticker, conn)
+                if not cik:
+                    return dfOut
                 ## Then pull out the corresponding data
                 cursor.execute('''SELECT * FROM idx WHERE cik=?;''', (cik,))
                 recs = cursor.fetchall()

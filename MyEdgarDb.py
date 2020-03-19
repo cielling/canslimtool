@@ -134,3 +134,30 @@ def lookup_cik_ticker(ticker):
     cik = atagCik.text.split(" ")[0]
     conm = conmTag.text.split("CIK")[0].strip()
     return (str(cik), ticker, str(conm))
+
+
+def get_cik_for_ticker_db(ticker, conn):
+    """Lookup the CIK for a ticker in an active connection to my edgar database."""
+    cursor = conn.cursor()
+    cursor.execute('''SELECT * FROM cik_ticker_name WHERE ticker=?;''',(ticker,))
+    res = cursor.fetchall()
+    ## If this ticker is not in the lookup database, try to search on the web.
+    if not res:
+        record = lookup_cik_ticker(ticker)
+        if not record:
+            print("Error! Unable to look up '{:s}' on www.sec.gov.".format(ticker))
+            cik = None
+        else:
+            #insert data into the table
+            cursor.execute ('INSERT INTO cik_ticker_name VALUES (?, ?, ?)', record)
+            conn.commit ()
+            cik = record[0]
+    else:
+        try: 
+            cik = res[0][0]
+        except BaseException as be:
+            print("Unable to locate CIK for ticker {:s}.".format(ticker))
+            print("Record in database: {:s}".format(str(res)))
+            print(str(be))
+            cik = None
+    return cik
