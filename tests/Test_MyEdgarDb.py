@@ -31,6 +31,16 @@ class TestMyEdgarDb(unittest.TestCase):
 		result = get_cik_for_ticker_db(ticker, self.conn)
 		self.assertEqual(expect, result)
 
+	def test_get_cik_for_ticker_db_AAAA_doesnt_exist(self):
+		ticker = "AAAA"
+		result = get_cik_for_ticker_db(ticker, self.conn)
+		self.assertIsNone(result)
+        
+	def test_get_cik_for_ticker_db_BABA_not_in_db(self):
+		ticker = "BABA"
+		expect = "0001577552"
+		result = get_cik_for_ticker_db(ticker, self.conn)
+		self.assertEqual(expect, result)
 
 if __name__ == '__main__':
     unittest.main()
