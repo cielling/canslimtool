@@ -6,7 +6,7 @@ from datetime import datetime
 import os
 from sys import argv
 
-from MyEdgarDb import get_list_sec_filings, get_cik_ticker_lookup_db, lookup_cik_ticker
+from MyEdgarDb import get_list_sec_filings, get_cik_ticker_lookup_db, get_cik_for_ticker_db
 from CanslimParams import CanslimParams
 
 
@@ -57,10 +57,9 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 if not cik:
                     return dfOut
                 ## Then pull out the corresponding data
-                cursor.execute('''SELECT * FROM idx WHERE cik=?;''', (cik,))
-                recs = cursor.fetchall()
+                recs = get_records_for_cik_db(cik, conn)
                 ## Create a list of column names from the database column names
-                names = list(map(lambda x: x[0], cursor.description))
+                names = get_column_names(conn)
                 idx = pd.DataFrame(data=recs, columns=names)
                 ## Ensure that the 'date' column is formatted as a time stamp
                 idx['date'] = pd.to_datetime(idx['date'])

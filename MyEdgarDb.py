@@ -161,3 +161,16 @@ def get_cik_for_ticker_db(ticker, conn):
             print(str(be))
             cik = None
     return cik
+
+def get_records_for_cik_db(cik, conn):
+    cursor = conn.cursor()
+    cursor.execute('''SELECT * FROM idx WHERE cik=?;''', (cik,))
+    recs = cursor.fetchall()
+    return recs
+
+def get_column_names(conn):
+    cursor = conn.cursor()
+    names = list(map(lambda x: x[0], cursor.description))
+    return names
+    
+    
