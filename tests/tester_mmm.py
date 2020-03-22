@@ -1,14 +1,13 @@
 from __future__ import print_function
 import pandas as pd
-from bs4 import BeautifulSoup as BSoup
+from sys import path as syspath
+syspath.insert(0, "..")
 from CanslimParams import CanslimParams
 import numpy as np
 from datetime import date, timedelta, datetime
 #from datetime import datetime.now as now
 from myAssert import areEqual
 from os import path as ospath
-from sys import path as syspath
-syspath.insert(0, "..")
 
 ## "current date" = 2019 Q1
 currentDate = date(2019,2,1)

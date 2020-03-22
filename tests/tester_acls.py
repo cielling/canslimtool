@@ -8,6 +8,7 @@ from CanslimParams import CanslimParams
 from myAssert import areEqual
 from os import path as ospath
 
+# Date: 2018-08-31
 
 testDir = ospath.join("..", "TestData")
 ticker = "ACLS"

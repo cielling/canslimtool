@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup as BSoup
 from sys import path as syspath
 syspath.insert(0, "..")
 from CanslimParams import CanslimParams
+from SecFiling10Q import SecFiling10Q
 from myAssert import areEqual
 from os import path as ospath
 
@@ -11,14 +12,14 @@ from os import path as ospath
 testDir = ospath.join("..", "TestData")
 ticker = "ALEX"
 
-all10Qs = pd.read_csv(ospath.join(testDir, "{:s}_all_10ks.csv".format(ticker.lower())), \
+all10Qs = pd.read_csv(ospath.join(testDir, "{:s}_all_10qs.csv".format(ticker.lower())), \
         dtype={'cik':str, 'conm':str, 'type':str, 'path':str, 'date':str})
 
 
 testfile = all10Qs[all10Qs.date == "2018-05-10"]
 filing = SecFiling10Q(ticker)
 filename = filing.download(testfile.cik.iloc[0], testfile.conm.iloc[0], testfile.type.iloc[0], \
-        testfile.date.iloc[0], testfile.path.iloc[0], downloadPath = "TestData\\")
+        testfile.date.iloc[0], testfile.path.iloc[0], downloadPath = testDir)
 ## Load the data, and proceed if successful.
 if filing.load(filename):
     print("Verifying EPS")

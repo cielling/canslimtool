@@ -15,6 +15,7 @@ from CanslimParams import CanslimParams
 from myAssert import areEqual
 from os import path as ospath
 
+# Date = 2018-04-15
 
 testDir = ospath.join("..", "TestData")
 
