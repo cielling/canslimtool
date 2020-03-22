@@ -168,9 +168,13 @@ def get_records_for_cik_db(cik, conn):
     recs = cursor.fetchall()
     return recs
 
-def get_column_names(conn):
-    cursor = conn.cursor()
-    names = list(map(lambda x: x[0], cursor.description))
+def get_column_names_idx():
+    names = ['cik', 'conm', 'type', 'date', 'path']
+    return names
+ 
+ 
+def get_column_names_cik_ticker_name():
+    names = ['cik', 'ticker', 'name']
     return names
     
     
