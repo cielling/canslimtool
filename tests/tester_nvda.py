@@ -1,16 +1,20 @@
 from __future__ import print_function
 import pandas as pd
 from bs4 import BeautifulSoup as BSoup
-from myAssert import areEqual
-
+from sys import path as syspath
+syspath.insert(0, "..")
 from CanslimParams import CanslimParams
+from myAssert import areEqual
+from os import path as ospath
 
-all10Ks = pd.read_csv("TestData\\nvda_all_10ks.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
-all10Qs = pd.read_csv("TestData\\nvda_all_10qs.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
+
+testDir = ospath.join("..", "TestData")
+all10Ks = pd.read_csv(ospath.join(testDir, "nvda_all_10ks.csv"), parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
+all10Qs = pd.read_csv(ospath.join(testDir, "nvda_all_10qs.csv"), parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
 
 NvdaCanslimParams= CanslimParams("NVDA", all10Qs, all10Ks)
 ## Load the data, and proceed if successful.
-if NvdaCanslimParams.loadData("TestData"):
+if NvdaCanslimParams.loadData(testDir):
     ## Test all the EPS stuff
     ## Test the last four quarters to cover the case where the 10-K was filed instead of the 10-Q.
     print("Getting EPS for Q0:")

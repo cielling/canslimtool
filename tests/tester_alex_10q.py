@@ -1,20 +1,17 @@
 from __future__ import print_function
 import pandas as pd
 from bs4 import BeautifulSoup as BSoup
+from sys import path as syspath
+syspath.insert(0, "..")
+from CanslimParams import CanslimParams
+from myAssert import areEqual
+from os import path as ospath
 
-from SecFiling10Q import SecFiling10Q
 
-def areEqual(expect, val, eps = 0.01):
-    try:
-        diff = abs(float(val) / float(expect) - 1.0)
-        assert diff < eps, "Values don't match, expected= {:.12f}, found= {:.12f}, diff= {:.12f}.\n".format(expect, val, diff)
-        assert expect * val >= 0.0, "Values don't have the same sign: expected= {:f}, found= {:f}.\n".format(expect, val)
-    except BaseException as be:
-        print(be)
-
+testDir = ospath.join("..", "TestData")
 ticker = "ALEX"
 
-all10Qs = pd.read_csv("TestData\\"+ticker.lower()+"_all_10qs.csv", \
+all10Qs = pd.read_csv(ospath.join(testDir, "{:s}_all_10ks.csv".format(ticker.lower())), \
         dtype={'cik':str, 'conm':str, 'type':str, 'path':str, 'date':str})
 
 

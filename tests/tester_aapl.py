@@ -1,32 +1,22 @@
 from __future__ import print_function
 import pandas as pd
 from bs4 import BeautifulSoup as BSoup
-
+from sys import path as syspath
+syspath.insert(0, "..")
 from CanslimParams import CanslimParams
 from SecFiling10Q import SecFiling10Q
+from myAssert import areEqual
+from os import path as ospath
 
-def areEqual(expect, val, eps = 0.01):
-    try:
-        diff = abs(float(val) / float(expect) - 1.0)
-        assert diff < eps, "Values don't match, expected= {:.12f}, found= {:.12f}, diff= {:.12f}.\n".format(expect, val, diff)
-        assert expect * val >= 0.0, "Values don't have the same sign: expected= {:f}, found= {:f}.\n".format(expect, val)
-    except BaseException as be:
-        print(be)
+# Date: 2018-08-01
 
-
-all10Ks = pd.read_csv("TestData\\aapl_all_10ks.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
-all10Qs = pd.read_csv("TestData\\aapl_all_10qs.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
-
-# test10Q = SecFiling10Q("AAPL")
-# test10Q.load("TestData\\APPLE INC\\320193_APPLE INC_10-Q_2018-08-000000")
-# print(test10Q.getEps())
-# contextId = test10Q.getCurrentContextId()
-# print("current context id: ", contextId)
-# print("Sales= ", test10Q.getSales(contextId))
+testDir = ospath.join("..", "TestData")
+all10Ks = pd.read_csv(ospath.join(testDir, "aapl_all_10ks.csv"), parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
+all10Qs = pd.read_csv(ospath.join(testDir, "aapl_all_10qs.csv"), parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
 
 canslim= CanslimParams("AAPL", all10Qs, all10Ks)
 ## Load the data, and proceed if successful.
-if canslim.loadData("TestData"):
+if canslim.loadData(testDir):
     ## Test all the EPS stuff
     ## Test the last four quarters to cover the case where the 10-K was filed instead of the 10-Q.
     print("Getting EPS for Q0:")
@@ -147,7 +137,7 @@ if canslim.loadData("TestData"):
     # Test the ROE
     print("Getting current ROE:")
     expect = 11519.0/114949.0
-    val = canslim.getRoeCurrent()
+    val = canslim.getRoeTTM()
     print(val)
     areEqual(expect, val)
     

@@ -9,25 +9,23 @@ from bs4 import BeautifulSoup as BSoup
 ## found was later overwritten, just because under some circumstances it saved the
 ## the last one it found, not the first one. 
 
+from sys import path as syspath
+syspath.insert(0, "..")
 from CanslimParams import CanslimParams
+from myAssert import areEqual
+from os import path as ospath
 
-def areEqual(expect, val, eps = 0.01):
-    print("Expected: ", expect, " actual: ", val)
-    try:
-        diff = abs(float(val) / float(expect) - 1.0)
-        assert diff < eps, "Values don't match, expected= {:.12f}, found= {:.12f}, diff= {:.12f}.\n".format(expect, val, diff)
-        assert expect * val >= 0.0, "Values don't have the same sign: expected= {:f}, found= {:f}.\n".format(expect, val)
-    except BaseException as be:
-        print(be)
 
-all10Ks = pd.read_csv("TestData\\adsk_all_10ks.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
-all10Qs = pd.read_csv("TestData\\adsk_all_10qs.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
+testDir = ospath.join("..", "TestData")
+
+all10Ks = pd.read_csv(ospath.join(testDir, "adsk_all_10ks.csv"), parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
+all10Qs = pd.read_csv(ospath.join(testDir, "adsk_all_10qs.csv"), parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
 
 ticker = "ADSK"
 
 canslim= CanslimParams(ticker, all10Qs, all10Ks)
 ## Load the data, and proceed if successful.
-if canslim.loadData("TestData"):
+if canslim.loadData(testDir):
     ## Test all the EPS stuff
     ## Test the last four quarters to cover the case where the 10-K was filed instead of the 10-Q.
     print("Getting EPS for Q0:")
@@ -97,7 +95,7 @@ if canslim.loadData("TestData"):
     ## Test the ROE
     print("Getting current ROE:")
     expect = -23700000.0/-338300000.0
-    val = canslim.getRoeCurrent()
+    val = canslim.getRoeTTM()
     areEqual(expect, val)
     
 

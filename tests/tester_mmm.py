@@ -6,6 +6,9 @@ import numpy as np
 from datetime import date, timedelta, datetime
 #from datetime import datetime.now as now
 from myAssert import areEqual
+from os import path as ospath
+from sys import path as syspath
+syspath.insert(0, "..")
 
 ## "current date" = 2019 Q1
 currentDate = date(2019,2,1)
@@ -40,13 +43,14 @@ daysY = np.array(l)
 
 print("Testing ticker {:s}".format(ticker))
 
-all10Ks = pd.read_csv("TestData\\" + ticker.lower() + "_all_10ks.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
-all10Qs = pd.read_csv("TestData\\" + ticker.lower() + "_all_10qs.csv", parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
+testDir = ospath.join("..", "TestData")
+all10Ks = pd.read_csv(ospath.join(testDir, "{:s}_all_10ks.csv".format(ticker.lower())), parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
+all10Qs = pd.read_csv(ospath.join(testDir, "{:s}_all_10qs.csv".format(ticker.lower())), parse_dates=['date'], dtype={'cik':str, 'conm':str, 'type':str,'path':str})
 
 canslim= CanslimParams(ticker, all10Qs, all10Ks)
 ## Load the data, and proceed if successful.
 oldestDate = datetime(2014, 1, 1)
-if canslim.loadData("TestData", oldestDate):
+if canslim.loadData(testDir, oldestDate):
     ## Test all the EPS stuff
     for q in range(0, len(epsQ)):
         print("Getting EPS for quarter {:d}".format(q))
