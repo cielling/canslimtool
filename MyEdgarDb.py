@@ -1,4 +1,4 @@
-def get_list_sec_filings ():
+def get_list_sec_filings (duration = 5, dbname = "edgar_idx.db"):
     """Generate the list of index files archived in EDGAR since start_year (earliest: 1993) until the most recent quarter
        Note: this does not download the filings itself, just enough information to generate the filing urls from it.
     """
@@ -7,7 +7,7 @@ def get_list_sec_filings ():
     current_year = datetime.date.today().year
     current_quarter = (datetime.date.today().month - 1) // 3 + 1
     # go back the last four years so we get the last ten 10-Q's and last three 10-K's
-    start_year = current_year - 5
+    start_year = current_year - duration
     with open("logfile.txt", "a+") as logfile:
         logfile.write('Start year for downloading SEC data is {:d}'.format(start_year))
     ## Generate a list of quarter-year combinations for which to get urls
