@@ -6,7 +6,7 @@ from datetime import datetime
 import os
 from sys import argv
 
-from MyEdgarDb import get_list_sec_filings, get_cik_ticker_lookup_db, get_cik_for_ticker_db
+from MyEdgarDb import *
 from CanslimParams import CanslimParams
 
 
@@ -53,13 +53,13 @@ def analyzeTicker(df, doRestart, procNum = 0):
                 dfOut['Score'] = -99.99
                 ## Get the 10-K and 10-Q filing references from the database
                 ## First, look up the CIK for the ticker symbol
-                cik = get_cik_for_ticker_db(ticker, conn)
+                cik = get_cik_for_ticker_db(symbol, conn)
                 if not cik:
                     return dfOut
                 ## Then pull out the corresponding data
                 recs = get_records_for_cik_db(cik, conn)
                 ## Create a list of column names from the database column names
-                names = get_column_names(conn)
+                names = get_column_names_idx()
                 idx = pd.DataFrame(data=recs, columns=names)
                 ## Ensure that the 'date' column is formatted as a time stamp
                 idx['date'] = pd.to_datetime(idx['date'])
@@ -269,7 +269,7 @@ for symbol in df.Symbol:
         #print(dfAnalyzedTicker)
         ## TODO: appending to dfAnalzed doesn't work (because it's initially empty?). Fix this.
         dfAnalyzed = pd.concat([dfAnalyzedTicker, dfAnalyzed])
-        print(dfAnalyzed[dfAnalyzed.Symbol == symbol])
+        #print(dfAnalyzed[dfAnalyzed.Symbol == symbol])
         dfAnalyzed.to_excel(screenerResultsFileAnalysed, index=None)
         ###### REMOVE THIS IN PRODUCTION RUNS!!!!
         #count += 1
