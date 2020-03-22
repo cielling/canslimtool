@@ -19,15 +19,15 @@ def get_list_sec_filings ():
     urls = ['https://www.sec.gov/Archives/edgar/full-index/%d/%s/master.idx' % (x[0], x[1]) for x in history]
     urls.sort()
     ## Update the database with these urls
-    update_index_files_db (urls)
+    update_index_files_db (urls, dbname)
     #return urls
     
-def update_index_files_db (urls):
+def update_index_files_db (urls, dbname = "edgar_idx.db"):
     """Download index files and write content into SQLite."""
     import sqlite3
     import requests
 
-    con = sqlite3.connect('edgar_idx.db')
+    con = sqlite3.connect(dbname)
     cur = con.cursor()
     # to do: check if table exists, if yes, then update, don't erase
     cur.execute('DROP TABLE IF EXISTS idx')
@@ -49,7 +49,7 @@ def update_index_files_db (urls):
     con.commit()
     con.close()
    
-def get_cik_ticker_lookup_db ():
+def get_cik_ticker_lookup_db (dbname = "edgar_idx.db"):
     """This creates the look-up table to translate ticker symbol to CIK identifier. 
     WARNING! This destroys the existing table!"""
     import sqlite3
@@ -67,7 +67,7 @@ def get_cik_ticker_lookup_db ():
     #print (lookup_table_df.CIK.size)
 
     #write this as a second table in edgar_idx
-    con = sqlite3.connect('edgar_idx.db')
+    con = sqlite3.connect(dbname)
     cur = con.cursor()
     cur.execute('DROP TABLE IF EXISTS cik_ticker_name')
     cur.execute('CREATE TABLE cik_ticker_name (cik TEXT, ticker TEXT, name TEXT)')
